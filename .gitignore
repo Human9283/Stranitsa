@@ -10,3 +10,4 @@ core/target/
 stranitsa-data/
 *.deb
 *.bundle
+patches/
