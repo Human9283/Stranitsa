@@ -340,7 +340,7 @@ private fun UndoBar(st: AppState) {
     val b = st.bar
     if (b == null) {
         // Очистку из настроек можно отменить, пока после неё ничего не менялось.
-        st.cleanupUndo?.let { n ->
+        st.cleanupUndo?.takeIf { st.snap.settings.showCleanupUndo }?.let { n ->
             Hairline()
             Row(Modifier.fillMaxWidth().height(36.dp).padding(start = 28.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
                 Txt(S.cleanupUndoBar(n), Type.meta.copy(fontSize = Type.ui.fontSize * 0.93f), c.muted, Modifier.weight(1f), maxLines = 1)

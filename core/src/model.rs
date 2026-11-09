@@ -87,6 +87,10 @@ pub struct Settings {
     /// Проверять, не вышла ли новая версия (GitHub Releases).
     #[uniffi(default = true)]
     pub check_updates: bool,
+    /// После очистки показывать на главном экране строку «Отменить». По умолчанию выключено:
+    /// отменить можно и в настройках сразу после очистки.
+    #[uniffi(default = false)]
+    pub show_cleanup_undo: bool,
 }
 
 impl Default for Settings {
@@ -100,6 +104,7 @@ impl Default for Settings {
             last_seen: 0,
             auto_sync_minutes: 0,
             check_updates: true,
+            show_cleanup_undo: false,
         }
     }
 }

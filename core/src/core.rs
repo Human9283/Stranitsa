@@ -251,14 +251,15 @@ impl StCore {
             ),
             format!("removal marks: lines {}, lists {}", tomb_entries, lib.deleted_notebooks.len()),
             format!(
-                "settings: theme {:?}, pure black {}, wallpaper colors {}, hints {}, system backup {}, auto sync {} min, update check {}",
+                "settings: theme {:?}, pure black {}, wallpaper colors {}, hints {}, system backup {}, auto sync {} min, update check {}, cleanup undo bar {}",
                 set.theme,
                 on(set.pure_black),
                 on(set.dynamic_color),
                 on(set.show_hints),
                 on(set.system_backup),
                 set.auto_sync_minutes,
-                on(set.check_updates)
+                on(set.check_updates),
+                on(set.show_cleanup_undo)
             ),
             format!("known devices: {}", i.identity.peers.len()),
             format!("undo steps: {}", i.undo.len()),
@@ -528,6 +529,20 @@ mod tests {
             .collect();
         assert_eq!(aside.len(), 1);
         assert_eq!(std::fs::read(&aside[0]).unwrap(), original);
+    }
+
+    #[test]
+    fn cleanup_undo_bar_is_off_by_default_and_old_files_still_load() {
+        assert!(!Settings::default().show_cleanup_undo);
+        // Файл старой версии: в настройках нет нового поля.
+        let mut v: serde_json::Value = serde_json::from_str(&StCore::in_memory(1).export_json()).unwrap();
+        assert!(v["settings"].as_object_mut().unwrap().remove("showCleanupUndo").is_some());
+        let lib = crate::store::decode(&v.to_string(), 1).unwrap();
+        assert!(!lib.settings.show_cleanup_undo);
+        let core = StCore::in_memory(1);
+        let mut set = core.snapshot().settings;
+        set.show_cleanup_undo = true;
+        assert!(core.set_settings(set).settings.show_cleanup_undo);
     }
 
     #[test]

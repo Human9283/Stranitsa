@@ -176,6 +176,7 @@ fun SettingsDialog(st: AppState, dataFile: File, window: Frame?) {
                 }
             }
         }
+        SettingRow(S.cleanupUndoToggle, S.cleanupUndoToggleHint) { Switch(set.showCleanupUndo, S.cleanupUndoToggle) { v -> st.apply { core, _ -> core.setSettings(set.copy(showCleanupUndo = v)) } } }
         SettingRow(S.pureBlack) { Switch(set.pureBlack, S.pureBlack) { v -> st.apply { core, _ -> core.setSettings(set.copy(pureBlack = v)) } } }
         SettingRow(S.dataFile, dataFile.path) {
             Btn(S.openFolder, { runCatching { Desktop.getDesktop().open(dataFile.parentFile) } }, Kind.Outline)

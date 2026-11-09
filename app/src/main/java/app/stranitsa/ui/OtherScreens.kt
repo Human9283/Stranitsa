@@ -266,6 +266,11 @@ fun SettingsScreen(
                 }
             }
             Hairline(Modifier.padding(top = 6.dp))
+            ToggleRow(
+                stringResource(R.string.cleanup_undo_toggle), stringResource(R.string.cleanup_undo_toggle_hint),
+                settings.showCleanupUndo,
+            ) { vm.setShowCleanupUndo(it) }
+            Hairline()
         }
 
         SectionLabel(stringResource(R.string.section_data))

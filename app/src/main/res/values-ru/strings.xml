@@ -309,4 +309,6 @@
     <string name="update_allow">Разрешите установку из «Страницы» в открывшихся настройках, вернитесь и нажмите «Установить» ещё раз.</string>
     <string name="update_close">Закрыть</string>
     <string name="cleanup_undo_bar">Убрано строк: %1$d</string>
+    <string name="cleanup_undo_toggle">Показывать «Отменить» после очистки</string>
+    <string name="cleanup_undo_toggle_hint">Строка с кнопкой внизу главного экрана. Без неё очистку можно отменить сразу здесь, в настройках.</string>
 </resources>

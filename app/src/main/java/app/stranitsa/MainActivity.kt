@@ -100,7 +100,7 @@ fun StApp(vm: StViewModel, lib: Snapshot) {
             onUpdateDownload = vm::downloadUpdate,
             onUpdateCancel = vm::cancelDownload,
             onDismissUpdate = vm::dismissUpdate,
-            cleanupUndo = vm.cleanupUndo,
+            cleanupUndo = vm.cleanupUndo.takeIf { lib.settings.showCleanupUndo },
             onUndoCleanup = vm::undo,
             crashed = vm.crash != null,
             onDismissCrash = vm::dismissCrash,
