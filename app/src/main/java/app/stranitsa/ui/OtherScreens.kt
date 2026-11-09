@@ -235,6 +235,12 @@ fun SettingsScreen(
 
         SectionLabel(stringResource(R.string.section_cleanup))
         Column(Modifier.padding(horizontal = 20.dp)) {
+            ToggleRow(
+                stringResource(R.string.cleanup_enable), stringResource(R.string.cleanup_enable_hint),
+                settings.cleanupEnabled,
+            ) { vm.setCleanupEnabled(it) }
+            Hairline()
+            if (settings.cleanupEnabled) {
             val days = listOf(30, 90, 180, 365)
             var pick by rememberSaveable { mutableIntStateOf(1) }
             var confirm by rememberSaveable { mutableStateOf(false) }
@@ -266,11 +272,7 @@ fun SettingsScreen(
                 }
             }
             Hairline(Modifier.padding(top = 6.dp))
-            ToggleRow(
-                stringResource(R.string.cleanup_undo_toggle), stringResource(R.string.cleanup_undo_toggle_hint),
-                settings.showCleanupUndo,
-            ) { vm.setShowCleanupUndo(it) }
-            Hairline()
+            }
         }
 
         SectionLabel(stringResource(R.string.section_data))

@@ -293,6 +293,6 @@
     <string name="update_allow">Allow installing from Stranitsa in the settings that just opened, go back and tap Install again.</string>
     <string name="update_close">Close</string>
     <string name="cleanup_undo_bar">Removed lines: %1$d</string>
-    <string name="cleanup_undo_toggle">Show “Undo” after cleaning up</string>
-    <string name="cleanup_undo_toggle_hint">A bar with a button at the bottom of the main screen. Without it you can undo right here in Settings, just after cleaning.</string>
+    <string name="cleanup_enable">Allow cleaning up old lines</string>
+    <string name="cleanup_enable_hint">Off: nothing is ever removed, closed lines stay struck through for good.</string>
 </resources>

@@ -82,6 +82,7 @@ class AppStateTest {
 
     @Test fun cleanupCanBeUndoneUntilSomethingElseChanges() {
         val core = StCore.inMemory(0)
+        core.setSettings(core.snapshot().settings.copy(cleanupEnabled = true))
         repeat(3) { core.add("t$it", 0) }
         core.snapshot().entries.forEach { core.done(it.id, 1) }
         core.add("alive", 0)

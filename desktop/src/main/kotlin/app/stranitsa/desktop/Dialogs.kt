@@ -152,7 +152,8 @@ fun SettingsDialog(st: AppState, dataFile: File, window: Frame?) {
             Txt(S.lastSync(java.time.format.DateTimeFormatter.ofPattern("HH:mm").format(java.time.Instant.ofEpochMilli(t).atZone(java.time.ZoneId.systemDefault())), who), Type.meta, c.muted, Modifier.padding(bottom = 6.dp))
         }
         SettingRow(S.checkUpdates, S.checkUpdatesHint) { Switch(set.checkUpdates, S.checkUpdates) { v -> st.apply { core, _ -> core.setSettings(set.copy(checkUpdates = v)) } } }
-        run {
+        SettingRow(S.cleanupEnable, S.cleanupEnableHint) { Switch(set.cleanupEnabled, S.cleanupEnable) { v -> st.apply { core, _ -> core.setSettings(set.copy(cleanupEnabled = v)) } } }
+        if (set.cleanupEnabled) run {
             val steps = listOf(30, 90, 180, 365)
             var pick by remember { mutableStateOf(1) }
             var confirm by remember { mutableStateOf(false) }
@@ -176,7 +177,6 @@ fun SettingsDialog(st: AppState, dataFile: File, window: Frame?) {
                 }
             }
         }
-        SettingRow(S.cleanupUndoToggle, S.cleanupUndoToggleHint) { Switch(set.showCleanupUndo, S.cleanupUndoToggle) { v -> st.apply { core, _ -> core.setSettings(set.copy(showCleanupUndo = v)) } } }
         SettingRow(S.pureBlack) { Switch(set.pureBlack, S.pureBlack) { v -> st.apply { core, _ -> core.setSettings(set.copy(pureBlack = v)) } } }
         SettingRow(S.dataFile, dataFile.path) {
             Btn(S.openFolder, { runCatching { Desktop.getDesktop().open(dataFile.parentFile) } }, Kind.Outline)

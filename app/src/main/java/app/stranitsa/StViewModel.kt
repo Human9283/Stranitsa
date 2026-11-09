@@ -40,7 +40,7 @@ interface StActions {
     fun setSystemBackup(on: Boolean)
     fun setAutoSync(minutes: Int)
     fun setCheckUpdates(on: Boolean)
-    fun setShowCleanupUndo(on: Boolean)
+    fun setCleanupEnabled(on: Boolean)
     fun cleanupPreview(days: Int): Int
     fun cleanup(days: Int)
     fun switchList(id: String)
@@ -220,7 +220,7 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
     override fun setDynamicColor(on: Boolean) = settings { it.copy(dynamicColor = on) }
     override fun setSystemBackup(on: Boolean) = settings { it.copy(systemBackup = on) }
     override fun setAutoSync(minutes: Int) { settings { it.copy(autoSyncMinutes = minutes) }; startAutoSync() }
-    override fun setShowCleanupUndo(on: Boolean) = settings { it.copy(showCleanupUndo = on) }
+    override fun setCleanupEnabled(on: Boolean) = settings { it.copy(cleanupEnabled = on) }
     override fun setCheckUpdates(on: Boolean) { settings { it.copy(checkUpdates = on) }; if (on) checkUpdates() else update = null }
     override fun switchList(id: String) { breakDays = 0; repo.apply { c, _ -> c.switchList(id) } }
     override fun addList(name: String) { repo.apply { c, n -> c.addList(name, n) } }

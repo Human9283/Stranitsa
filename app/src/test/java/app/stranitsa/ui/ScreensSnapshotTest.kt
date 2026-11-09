@@ -41,7 +41,7 @@ private object NoActions : StActions {
     override fun setSystemBackup(on: Boolean) {}
     override fun setAutoSync(minutes: Int) {}
     override fun setCheckUpdates(on: Boolean) {}
-    override fun setShowCleanupUndo(on: Boolean) {}
+    override fun setCleanupEnabled(on: Boolean) {}
     override fun cleanupPreview(days: Int) = 12
     override fun cleanup(days: Int) {}
     override fun switchList(id: String) {}
@@ -217,6 +217,12 @@ class ScreensSnapshotTest {
     @Test fun settings() = shotTall {
         CompositionLocalProvider(LocalActivityResultRegistryOwner provides registryOwner) {
             SettingsScreen(ruCore().snapshot(), Settings(true, ThemeMode.SYSTEM, true, false, false, 0), NoActions, onBack = {})
+        }
+    }
+
+    @Test fun settings_cleanupOn() = shotTall {
+        CompositionLocalProvider(LocalActivityResultRegistryOwner provides registryOwner) {
+            SettingsScreen(ruCore().snapshot(), Settings(true, ThemeMode.SYSTEM, true, false, false, 0, cleanupEnabled = true), NoActions, onBack = {})
         }
     }
 

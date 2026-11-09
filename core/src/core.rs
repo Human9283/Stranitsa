@@ -251,7 +251,7 @@ impl StCore {
             ),
             format!("removal marks: lines {}, lists {}", tomb_entries, lib.deleted_notebooks.len()),
             format!(
-                "settings: theme {:?}, pure black {}, wallpaper colors {}, hints {}, system backup {}, auto sync {} min, update check {}, cleanup undo bar {}",
+                "settings: theme {:?}, pure black {}, wallpaper colors {}, hints {}, system backup {}, auto sync {} min, update check {}, cleanup {}",
                 set.theme,
                 on(set.pure_black),
                 on(set.dynamic_color),
@@ -259,7 +259,7 @@ impl StCore {
                 on(set.system_backup),
                 set.auto_sync_minutes,
                 on(set.check_updates),
-                on(set.show_cleanup_undo)
+                on(set.cleanup_enabled)
             ),
             format!("known devices: {}", i.identity.peers.len()),
             format!("undo steps: {}", i.undo.len()),
@@ -385,6 +385,11 @@ impl StCore {
 
     /// Убрать закрытые строки старше `days` суток во всех списках. Можно отменить.
     pub fn cleanup(&self, days: i32, now: i64) -> Snapshot {
+        if !self.inner.lock().unwrap().lib.settings.cleanup_enabled {
+            // Выключено в настройках: ничего не убираем, что бы ни вызвало.
+            crate::diag::event("cleanup: refused, turned off in settings");
+            return self.snapshot();
+        }
         let before = now - days.max(0) as i64 * 86_400_000;
         let mut removed = 0;
         let snap = self.mutate(true, |l| {
@@ -532,17 +537,25 @@ mod tests {
     }
 
     #[test]
-    fn cleanup_undo_bar_is_off_by_default_and_old_files_still_load() {
-        assert!(!Settings::default().show_cleanup_undo);
+    fn cleanup_is_off_by_default_and_does_nothing_until_enabled() {
+        assert!(!Settings::default().cleanup_enabled);
         // Файл старой версии: в настройках нет нового поля.
         let mut v: serde_json::Value = serde_json::from_str(&StCore::in_memory(1).export_json()).unwrap();
-        assert!(v["settings"].as_object_mut().unwrap().remove("showCleanupUndo").is_some());
+        assert!(v["settings"].as_object_mut().unwrap().remove("cleanupEnabled").is_some());
         let lib = crate::store::decode(&v.to_string(), 1).unwrap();
-        assert!(!lib.settings.show_cleanup_undo);
-        let core = StCore::in_memory(1);
+        assert!(!lib.settings.cleanup_enabled);
+
+        let day = 86_400_000i64;
+        let core = StCore::in_memory(0);
+        core.add("старое".into(), 10);
+        let id = core.snapshot().entries[0].id.clone();
+        core.done(id, 100);
+        assert_eq!(core.cleanup_preview(30, 100 * day), 1);
+        assert_eq!(core.cleanup(30, 100 * day).entries.len(), 1, "выключено — ничего не убирается");
         let mut set = core.snapshot().settings;
-        set.show_cleanup_undo = true;
-        assert!(core.set_settings(set).settings.show_cleanup_undo);
+        set.cleanup_enabled = true;
+        core.set_settings(set);
+        assert_eq!(core.cleanup(30, 100 * day).entries.len(), 0);
     }
 
     #[test]
@@ -592,6 +605,9 @@ mod tests {
         let day = 86_400_000i64;
         let phone = StCore::in_memory(0);
         let pc = StCore::in_memory(0);
+        let mut on = phone.snapshot().settings;
+        on.cleanup_enabled = true;
+        phone.set_settings(on);
         phone.add("старое".into(), 10);
         phone.add("новое".into(), 20);
         let old = phone.snapshot().entries[0].id.clone();
