@@ -298,6 +298,25 @@ impl StCore {
         })
     }
 
+    // ---------- очистка ----------
+
+    /// Сколько закрытых строк убрала бы очистка (закрытых больше `days` суток назад) во всех списках.
+    pub fn cleanup_preview(&self, days: i32, now: i64) -> i32 {
+        let before = now - days.max(0) as i64 * 86_400_000;
+        let i = self.inner.lock().unwrap();
+        i.lib.notebooks.iter().map(|n| n.cleanup_count(before) as i32).sum()
+    }
+
+    /// Убрать закрытые строки старше `days` суток во всех списках. Можно отменить.
+    pub fn cleanup(&self, days: i32, now: i64) -> Snapshot {
+        let before = now - days.max(0) as i64 * 86_400_000;
+        self.mutate(true, |l| {
+            for n in &mut l.notebooks {
+                n.cleanup(before, now);
+            }
+        })
+    }
+
     // ---------- настройки ----------
 
     pub fn set_settings(&self, settings: Settings) -> Snapshot {
@@ -433,6 +452,35 @@ mod tests {
         core.add("a".into(), 2);
         core.flush();
         assert!(core.last_save_error().is_some());
+    }
+
+    #[test]
+    fn cleanup_is_undoable_and_does_not_come_back_through_sync() {
+        let day = 86_400_000i64;
+        let phone = StCore::in_memory(0);
+        let pc = StCore::in_memory(0);
+        phone.add("старое".into(), 10);
+        phone.add("новое".into(), 20);
+        let old = phone.snapshot().entries[0].id.clone();
+        phone.done(old, 100);
+        // компьютер получает копию
+        pc.merge_json(phone.export_json(), 200).unwrap();
+        assert_eq!(pc.snapshot().entries.len(), 2);
+        let now = 100 * day;
+        assert_eq!(phone.cleanup_preview(30, now), 1);
+        let s = phone.cleanup(30, now);
+        assert_eq!(s.entries.len(), 1);
+        // слияние с компьютером, у которого строка ещё есть, её не возвращает
+        phone.merge_json(pc.export_json(), now + 1).unwrap();
+        assert_eq!(phone.snapshot().entries.len(), 1);
+        // и убирает её на компьютере
+        pc.merge_json(phone.export_json(), now + 2).unwrap();
+        assert_eq!(pc.snapshot().entries.len(), 1);
+        // отмена возвращает строку, и уже насовсем
+        let s = phone.undo(now + 3);
+        assert_eq!(s.entries.len(), 2);
+        pc.merge_json(phone.export_json(), now + 4).unwrap();
+        assert_eq!(pc.snapshot().entries.len(), 2);
     }
 
     #[test]

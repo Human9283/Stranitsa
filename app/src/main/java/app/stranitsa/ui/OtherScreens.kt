@@ -47,6 +47,7 @@ import app.stranitsa.core.ThemeMode
 import app.stranitsa.core.pageSizeLimits
 import android.os.Build
 import androidx.compose.foundation.layout.height
+import androidx.compose.runtime.mutableIntStateOf
 import java.time.Instant
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.size
@@ -227,6 +228,41 @@ fun SettingsScreen(state: Snapshot, settings: Settings, vm: StActions, onBack: (
             Hairline()
             ToggleRow(stringResource(R.string.check_updates), stringResource(R.string.check_updates_hint), settings.checkUpdates) { vm.setCheckUpdates(it) }
             Hairline()
+        }
+
+        SectionLabel(stringResource(R.string.section_cleanup))
+        Column(Modifier.padding(horizontal = 20.dp)) {
+            val days = listOf(30, 90, 180, 365)
+            var pick by rememberSaveable { mutableIntStateOf(1) }
+            var confirm by rememberSaveable { mutableStateOf(false) }
+            var done by rememberSaveable { mutableStateOf<Int?>(null) }
+            val count = remember(pick, state.entries, done) { vm.cleanupPreview(days[pick]) }
+            Txt(stringResource(R.string.cleanup_title), t.setting, modifier = Modifier.padding(top = 6.dp))
+            Txt(stringResource(R.string.cleanup_hint), t.stats, c.muted)
+            Segmented(
+                days.map { stringResource(R.string.cleanup_days, it) }, pick,
+                { pick = it; confirm = false; done = null },
+                Modifier.padding(top = 8.dp, bottom = 6.dp),
+            )
+            if (!confirm) {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Txt(
+                        done?.let { res.getQuantityString(R.plurals.cleanup_done, it, it) }
+                            ?: res.getQuantityString(R.plurals.cleanup_count, count, count),
+                        t.stats, c.muted, Modifier.weight(1f),
+                    )
+                    if (done != null) TextAction(stringResource(R.string.undo), { vm.undo(); done = null }, color = c.accent)
+                    else TextAction(stringResource(R.string.cleanup_action), { confirm = true }, color = c.accent, enabled = count > 0)
+                }
+            } else {
+                Txt(res.getQuantityString(R.plurals.cleanup_confirm, count, count), t.hint, c.ink, Modifier.padding(top = 4.dp))
+                Row(Modifier.padding(top = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    FilledAction(stringResource(R.string.cleanup_action), { vm.cleanup(days[pick]); done = count; confirm = false })
+                    Spacer(Modifier.width(4.dp))
+                    TextAction(stringResource(R.string.act_cancel), { confirm = false })
+                }
+            }
+            Hairline(Modifier.padding(top = 6.dp))
         }
 
         SectionLabel(stringResource(R.string.section_data))

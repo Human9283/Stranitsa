@@ -40,6 +40,8 @@ interface StActions {
     fun setSystemBackup(on: Boolean)
     fun setAutoSync(minutes: Int)
     fun setCheckUpdates(on: Boolean)
+    fun cleanupPreview(days: Int): Int
+    fun cleanup(days: Int)
     fun switchList(id: String)
     fun addList(name: String)
     fun renameList(id: String, name: String)
@@ -159,6 +161,8 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
     override fun addList(name: String) { repo.apply { c, n -> c.addList(name, n) } }
     override fun renameList(id: String, name: String) { repo.apply { c, n -> c.renameList(id, name, n) } }
     override fun deleteList(id: String) { repo.apply { c, n -> c.deleteList(id, n) } }
+    override fun cleanupPreview(days: Int) = repo.core.cleanupPreview(days, now())
+    override fun cleanup(days: Int) { repo.apply { c, n -> c.cleanup(days, n) } }
     override fun search(query: String, includeClosed: Boolean) = repo.search(query, includeClosed)
     override fun doneSince(since: Long) = repo.doneSince(since)
     override fun exportJson(): String = repo.exportJson()

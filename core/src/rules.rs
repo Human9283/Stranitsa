@@ -242,6 +242,53 @@ impl Notebook {
         self.mark_reviewed(id, now)
     }
 
+    fn removable(e: &Entry, before: i64) -> bool {
+        let closed_before = e.closed_at.is_some_and(|t| t < before);
+        match e.status {
+            Status::Active => false,
+            // Отброшенное, которое ещё не разобрано, нужно показать в «Отброшенных» — не трогаем.
+            Status::Dismissed => e.reviewed && closed_before,
+            _ => closed_before,
+        }
+    }
+
+    /// Сколько закрытых строк `cleanup(before, …)` убрал бы.
+    pub fn cleanup_count(&self, before: i64) -> usize {
+        self.entries.iter().filter(|e| Self::removable(e, before)).count()
+    }
+
+    /// Убрать закрытые строки, закрытые раньше `before` (выполненные, перенесённые, удалённые и
+    /// уже разобранные отброшенные). Активные не трогаются никогда. Нумерация страниц сдвигается,
+    /// поэтому рабочая страница пересчитывается так, чтобы её первая оставшаяся строка осталась на ней.
+    /// Для каждой убранной строки остаётся «надгробие» — слияние с другим устройством её не вернёт.
+    pub fn cleanup(&mut self, before: i64, now: i64) -> usize {
+        let from = ((self.current_page * self.page_size) as usize).min(self.entries.len());
+        let anchor: Option<String> =
+            self.entries.iter().skip(from).find(|e| !Self::removable(e, before)).map(|e| e.id.clone());
+        let mut removed = 0;
+        let mut kept = Vec::with_capacity(self.entries.len());
+        for e in std::mem::take(&mut self.entries) {
+            if Self::removable(&e, before) {
+                self.deleted_entries.insert(e.id.clone(), now.max(e.updated_at + 1));
+                removed += 1;
+            } else {
+                kept.push(e);
+            }
+        }
+        self.entries = kept;
+        if removed > 0 {
+            let old = self.current_page;
+            self.current_page = match anchor.and_then(|id| self.entries.iter().position(|e| e.id == id)) {
+                Some(i) => self.page_of_index(i),
+                None => self.last_page(),
+            };
+            if self.current_page != old {
+                self.acted_on_visit = false;
+            }
+        }
+        removed
+    }
+
     /// Держит рабочую страницу в допустимых пределах (после слияния строк могло стать больше или меньше).
     pub fn clamp_page(&mut self) {
         self.current_page = self.current_page.clamp(0, self.last_page());
@@ -486,6 +533,34 @@ mod tests {
         let i = id(&s, "t1");
         s.cancel(&i, 1);
         assert!(s.dismiss_applies());
+    }
+
+    #[test]
+    fn cleanup_removes_only_old_closed_lines_and_keeps_the_working_page() {
+        let mut s = nb(30, 10);
+        // t1..t12 закрыты давно, t13 закрыта недавно, t14 отброшена, но не разобрана
+        for k in 1..=12 { let i = id(&s, &format!("t{k}")); s.done(&i, 100); }
+        let i = id(&s, "t13"); s.done(&i, 900);
+        s.go_to(2); // рабочая страница 3: строки t21..t30
+        let before_first = s.page_entries(2)[0].text.clone();
+        assert_eq!(s.cleanup_count(500), 12);
+        assert_eq!(s.cleanup(500, 1000), 12);
+        assert_eq!(s.entries.len(), 18);
+        assert!(s.entries.iter().all(|e| e.status == Status::Active || e.text == "t13"));
+        // первая строка рабочей страницы осталась на рабочей странице
+        assert!(s.page_entries(s.current_page).iter().any(|e| e.text == before_first));
+        assert_eq!(s.deleted_entries.len(), 12);
+        assert_eq!(s.cleanup(500, 1001), 0);
+    }
+
+    #[test]
+    fn cleanup_keeps_unreviewed_dismissed() {
+        let mut s = nb(12, 5);
+        s.advance(true, 10); // страница 1 отброшена
+        assert_eq!(s.cleanup(1_000, 2_000), 0);
+        let ids: Vec<String> = s.entries.iter().take(5).map(|e| e.id.clone()).collect();
+        for i in &ids { s.forget(i, 20); }
+        assert_eq!(s.cleanup(1_000, 2_000), 5);
     }
 
     #[test]

@@ -259,4 +259,27 @@
     <string name="check_updates_hint">Дважды в день спрашивать GitHub, не вышла ли новая версия</string>
     <string name="update_available">Доступна версия %1$s</string>
     <string name="update_get">Скачать</string>
+    <string name="section_cleanup">Очистка</string>
+    <string name="cleanup_title">Убрать старые закрытые строки</string>
+    <string name="cleanup_hint">Выполненные, перенесённые и удалённые строки только зачёркиваются и остаются на месте. Здесь можно убрать старые; нумерация страниц сдвинется. Невыполненные задачи не трогаются. Можно отменить.</string>
+    <string name="cleanup_days">%1$d дн.</string>
+    <string name="cleanup_action">Убрать</string>
+    <plurals name="cleanup_count">
+        <item quantity="one">%1$d строка старше этого срока</item>
+        <item quantity="few">%1$d строки старше этого срока</item>
+        <item quantity="many">%1$d строк старше этого срока</item>
+        <item quantity="other">%1$d строки старше этого срока</item>
+    </plurals>
+    <plurals name="cleanup_confirm">
+        <item quantity="one">Убрать %1$d закрытую строку? Нумерация страниц сдвинется.</item>
+        <item quantity="few">Убрать %1$d закрытые строки? Нумерация страниц сдвинется.</item>
+        <item quantity="many">Убрать %1$d закрытых строк? Нумерация страниц сдвинется.</item>
+        <item quantity="other">Убрать %1$d закрытой строки? Нумерация страниц сдвинется.</item>
+    </plurals>
+    <plurals name="cleanup_done">
+        <item quantity="one">Убрана %1$d строка</item>
+        <item quantity="few">Убрано %1$d строки</item>
+        <item quantity="many">Убрано %1$d строк</item>
+        <item quantity="other">Убрано %1$d строки</item>
+    </plurals>
 </resources>

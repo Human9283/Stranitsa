@@ -120,6 +120,13 @@ class Str(private val ru: Boolean) {
     val checkUpdatesHint = t("При запуске спрашивать GitHub, не вышла ли новая версия", "Ask GitHub at startup whether a new version is out")
     fun updateAvailable(v: String) = t("Доступна версия $v", "Version $v is available")
     val download = t("Скачать", "Download")
+    val cleanup = t("Очистка", "Cleanup")
+    val cleanupHint = t("Выполненные, перенесённые и удалённые строки только зачёркиваются. Здесь можно убрать старые; нумерация страниц сдвинется. Невыполненные не трогаются. Можно отменить.", "Done, moved and deleted lines are only crossed out. This removes the old ones; page numbers shift. Open tasks are never touched. Can be undone.")
+    fun days(n: Int) = t("$n дн.", "$n d")
+    fun cleanupCount(n: Int) = t("Старше этого срока: $n", "Older than that: $n")
+    fun cleanupConfirm(n: Int) = t("Убрать закрытых строк: $n? Нумерация страниц сдвинется.", "Remove $n closed lines? Page numbers will shift.")
+    fun cleanupDone(n: Int) = t("Убрано строк: $n", "Removed lines: $n")
+    val remove = t("Убрать", "Remove")
     // клавиши, справка
     val keys = t("Клавиши", "Keyboard shortcuts")
     val howTo = t("Как работает метод", "How the method works")

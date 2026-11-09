@@ -16,6 +16,8 @@ import androidx.compose.foundation.layout.fillMaxWidth
 import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
+import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
 import androidx.compose.runtime.LaunchedEffect
@@ -65,7 +67,7 @@ fun Modal(onClose: () -> Unit, width: Dp = 460.dp, onEnter: (() -> Unit)? = null
         contentAlignment = Alignment.Center,
     ) {
         Column(
-            Modifier.width(width).shadow(24.dp, RoundedCornerShape(10.dp)).clip(RoundedCornerShape(10.dp)).background(c.bg)
+            Modifier.width(width).heightIn(max = 700.dp).shadow(24.dp, RoundedCornerShape(10.dp)).clip(RoundedCornerShape(10.dp)).background(c.bg)
                 .border(1.dp, c.rule, RoundedCornerShape(10.dp))
                 .clickable(remember { MutableInteractionSource() }, null) {}
                 .padding(start = 24.dp, end = 24.dp, top = 22.dp, bottom = 18.dp),
@@ -119,6 +121,8 @@ fun SettingsDialog(st: AppState, dataFile: File, window: Frame?) {
     Modal({ st.dialog = Dialog.None }, width = 540.dp) {
         Txt(S.settings, Type.title)
         Spacer(h = 12.dp)
+        // Строки настроек прокручиваются: окно может быть невысоким, а кнопка «Готово» остаётся на виду.
+        Column(Modifier.weight(1f, fill = false).verticalScroll(rememberScrollState())) {
         SettingRow(S.linesPerPage, S.linesHint) {
             Btn("−", { st.apply { core, _ -> core.setPageSize(s.pageSize - 1) } }, Kind.Outline, enabled = s.pageSize > minSize)
             Txt(s.pageSize.toString(), Type.ui, c.ink, Modifier.width(36.dp).padding(horizontal = 8.dp))
@@ -144,6 +148,30 @@ fun SettingsDialog(st: AppState, dataFile: File, window: Frame?) {
             Txt(S.lastSync(java.time.format.DateTimeFormatter.ofPattern("HH:mm").format(java.time.Instant.ofEpochMilli(t).atZone(java.time.ZoneId.systemDefault())), who), Type.meta, c.muted, Modifier.padding(bottom = 6.dp))
         }
         SettingRow(S.checkUpdates, S.checkUpdatesHint) { Switch(set.checkUpdates, S.checkUpdates) { v -> st.apply { core, _ -> core.setSettings(set.copy(checkUpdates = v)) } } }
+        run {
+            val steps = listOf(30, 90, 180, 365)
+            var pick by remember { mutableStateOf(1) }
+            var confirm by remember { mutableStateOf(false) }
+            var done by remember { mutableStateOf<Int?>(null) }
+            val count = remember(pick, s.entries, done) { st.core.cleanupPreview(steps[pick], System.currentTimeMillis()) }
+            Hairline()
+            Column(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+                Txt(S.cleanup, Type.ui)
+                Txt(S.cleanupHint, Type.meta, c.muted, Modifier.padding(top = 2.dp, bottom = 8.dp))
+                Segmented(steps.map { S.days(it) }, pick) { pick = it; confirm = false; done = null }
+                Row(Modifier.padding(top = 8.dp), verticalAlignment = Alignment.CenterVertically) {
+                    Txt(
+                        when { confirm -> S.cleanupConfirm(count); done != null -> S.cleanupDone(done!!); else -> S.cleanupCount(count) },
+                        Type.meta, if (confirm) c.ink else c.muted, Modifier.weight(1f),
+                    )
+                    when {
+                        confirm -> { Btn(S.remove, { st.apply { core, n -> core.cleanup(steps[pick], n) }; done = count; confirm = false }, Kind.Filled); Btn(S.cancel, { confirm = false }) }
+                        done != null -> Btn(S.undo, { st.undo(); done = null }, Kind.Accent, "Ctrl+Z")
+                        else -> Btn(S.remove, { confirm = true }, Kind.Accent, enabled = count > 0)
+                    }
+                }
+            }
+        }
         SettingRow(S.pureBlack) { Switch(set.pureBlack, S.pureBlack) { v -> st.apply { core, _ -> core.setSettings(set.copy(pureBlack = v)) } } }
         SettingRow(S.dataFile, dataFile.path) {
             Btn(S.openFolder, { runCatching { Desktop.getDesktop().open(dataFile.parentFile) } }, Kind.Outline)
@@ -172,6 +200,7 @@ fun SettingsDialog(st: AppState, dataFile: File, window: Frame?) {
             }
         }
         status?.let { Txt(it, Type.meta, c.muted, Modifier.padding(top = 8.dp)) }
+        }
         DialogButtons { Btn(S.ok, { st.dialog = Dialog.None }, Kind.Filled, "Esc", height = 32.dp) }
     }
 }

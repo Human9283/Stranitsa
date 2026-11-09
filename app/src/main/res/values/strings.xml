@@ -249,4 +249,21 @@
     <string name="check_updates_hint">Twice a day, ask GitHub whether a new version is out</string>
     <string name="update_available">Version %1$s is available</string>
     <string name="update_get">Download</string>
+    <string name="section_cleanup">Cleanup</string>
+    <string name="cleanup_title">Remove old closed lines</string>
+    <string name="cleanup_hint">Done, moved and deleted lines are only crossed out and keep their place. This removes the old ones; page numbers shift. Open tasks are never touched. Can be undone.</string>
+    <string name="cleanup_days">%1$d d</string>
+    <string name="cleanup_action">Remove</string>
+    <plurals name="cleanup_count">
+        <item quantity="one">%1$d line is older than that</item>
+        <item quantity="other">%1$d lines are older than that</item>
+    </plurals>
+    <plurals name="cleanup_confirm">
+        <item quantity="one">Remove %1$d closed line? Page numbers will shift.</item>
+        <item quantity="other">Remove %1$d closed lines? Page numbers will shift.</item>
+    </plurals>
+    <plurals name="cleanup_done">
+        <item quantity="one">Removed %1$d line</item>
+        <item quantity="other">Removed %1$d lines</item>
+    </plurals>
 </resources>
