@@ -1,6 +1,4 @@
-<img src="desktop/icon/stranitsa.png" alt="" width="88" align="left">
-
-# Страница
+# <img src="desktop/icon/stranitsa.png" alt="" width="36"> Страница
 
 Список дел, который читают по страницам. Всё записывается в конец одного длинного списка,
 а задачу выбирают не по приоритетам, а по тому, что «выделилось» при чтении.
@@ -125,20 +123,8 @@ cd desktop && ./gradlew packageDistributionForCurrentOS   # установщик
 
 Установщик для компьютера собирается только на своей системе: `.msi` на Windows, `.dmg` на macOS.
 
-### Выпуск версии
-
-```bash
-git tag v1.1.0 && git push --tags
-```
-
-Workflow `.github/workflows/release.yml` соберёт APK и установщики для трёх систем и опубликует
-их в Releases. Для подписи APK в секретах репозитория нужны `ANDROID_KEYSTORE_BASE64`
-(base64 от `keystore/release.jks`) и `ANDROID_KEYSTORE_PROPERTIES` (содержимое
-`keystore/keystore.properties`). Без них соберётся неподписанный APK. Ключ в репозиторий
-не кладётся.
-
-Проверка обновлений не использует токен доступа к GitHub, поэтому работает только для
-**публичного** репозитория. Для форка укажите свой при сборке: `-PupdateRepo=владелец/имя`.
+Сборка для своего форка: укажите свой репозиторий для проверки обновлений,
+`-PupdateRepo=владелец/имя`.
 
 ## Устройство проекта
 
