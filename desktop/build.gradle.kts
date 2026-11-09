@@ -74,6 +74,15 @@ compose.desktop {
         // Версия и источник обновлений — внутрь программы.
         val updateRepo = (findProperty("updateRepo") as String?) ?: "Human9283/Stranitsa"
         jvmArgs += listOf("-Dstranitsa.version=$appVersion", "-Dstranitsa.updateRepo=$updateRepo")
+        // Память: программе нужно немного. Лёгкая сборка мусора, небольшая «куча» и кэш кода,
+        // только быстрый компилятор (C1). Программа без анимаций, перерисовка по событию.
+        jvmArgs += listOf(
+            "-XX:+UseSerialGC", "-Xms16m", "-Xmx256m", "-XX:MinHeapFreeRatio=5", "-XX:MaxHeapFreeRatio=20",
+            "-XX:ReservedCodeCacheSize=32m", "-XX:TieredStopAtLevel=1", "-Xss512k",
+        )
+        // Программная отрисовка: для окна с текстом хватает, а видеодрайвер и контекст GPU
+        // (Direct3D / OpenGL) держат в памяти процесса лишние десятки мегабайт. На macOS Metal оставляем.
+        if (!org.gradle.internal.os.OperatingSystem.current().isMacOsX) jvmArgs += "-Dskiko.renderApi=SOFTWARE"
         nativeDistributions {
             // Каждый формат собирается только на своей системе: .msi/.exe — на Windows, .dmg — на macOS.
             targetFormats(TargetFormat.Deb, TargetFormat.Rpm, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Dmg)
@@ -84,8 +93,41 @@ compose.desktop {
             modules("java.prefs", "jdk.unsupported")
             linux { iconFile.set(project.file("icon/stranitsa.png")) }
             macOS { iconFile.set(project.file("icon/stranitsa.icns")); bundleID = "app.stranitsa.desktop" }
-            windows { iconFile.set(project.file("icon/stranitsa.ico")); shortcut = true; dirChooser = true; perUserInstall = true; menuGroup = "Stranitsa"; upgradeUuid = "dc195755-2276-4fee-bd5a-dc2daf48d6fd" }
+            // Лицензию установщик показывает перед установкой.
+            licenseFile.set(rootProject.file("../LICENSE"))
+            windows {
+                iconFile.set(project.file("icon/stranitsa.ico"))
+                shortcut = true      // значок на рабочем столе
+                menu = true          // пункт в меню «Пуск»
+                menuGroup = "Stranitsa"
+                dirChooser = true
+                perUserInstall = true
+                upgradeUuid = "dc195755-2276-4fee-bd5a-dc2daf48d6fd"
+            }
         }
-        buildTypes.release.proguard { isEnabled.set(false) }
+        buildTypes.release.proguard {
+            isEnabled.set(true)
+            configurationFiles.from(project.file("proguard-rules.pro"))
+        }
+    }
+}
+
+// Среда выполнения Java по умолчанию собирается без сжатия (~87 МБ); со сжатием zip-9 около 54 МБ.
+// Перезаписываем образ, который собрал плагин, тем же набором модулей, но со сжатием.
+tasks.matching { it.name == "createRuntimeImage" }.configureEach {
+    val modules = listOf("java.base", "java.desktop", "java.logging", "jdk.crypto.ec", "java.prefs", "jdk.unsupported")
+    val out = layout.buildDirectory.dir("compose/tmp/main/runtime")
+    doLast {
+        val jlink = File(System.getProperty("java.home"), "bin/jlink" + if (org.gradle.internal.os.OperatingSystem.current().isWindows) ".exe" else "")
+        val dir = out.get().asFile
+        if (jlink.exists() && dir.exists()) {
+            dir.deleteRecursively()
+            val args = mutableListOf(jlink.path)
+            modules.forEach { args += listOf("--add-modules", it) }
+            args += listOf("--strip-debug", "--no-header-files", "--no-man-pages", "--strip-native-commands", "--compress=zip-9", "--output", dir.path)
+            val p = ProcessBuilder(args).redirectErrorStream(true).start()
+            val log = p.inputStream.bufferedReader().readText()
+            if (p.waitFor() != 0) throw GradleException("jlink failed:\n$log")
+        }
     }
 }

@@ -22,15 +22,20 @@ jobs:
         run: ./gradlew test
         shell: bash
       - name: Installer
+        if: runner.os != 'Windows'
         working-directory: desktop
-        run: ./gradlew packageDistributionForCurrentOS
+        run: ./gradlew packageReleaseDistributionForCurrentOS
         shell: bash
+      # Windows: свой установщик (Inno Setup) с проверкой установки, значков, запуска и удаления.
+      - name: Windows installer
+        if: runner.os == 'Windows'
+        working-directory: desktop
+        run: pwsh installer/build.ps1 -Version 1.0.0
       - uses: actions/upload-artifact@v4
         with:
           name: stranitsa-${{ runner.os }}
           path: |
-            desktop/build/compose/binaries/main/*/*.deb
-            desktop/build/compose/binaries/main/*/*.rpm
-            desktop/build/compose/binaries/main/*/*.msi
-            desktop/build/compose/binaries/main/*/*.exe
-            desktop/build/compose/binaries/main/*/*.dmg
+            desktop/build/compose/binaries/main-release/*/*.deb
+            desktop/build/compose/binaries/main-release/*/*.rpm
+            desktop/build/installer/*.exe
+            desktop/build/compose/binaries/main-release/*/*.dmg

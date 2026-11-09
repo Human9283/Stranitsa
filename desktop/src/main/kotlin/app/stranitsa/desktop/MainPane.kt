@@ -62,10 +62,7 @@ import app.stranitsa.core.Status
 import kotlinx.coroutines.delay
 import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
-private val dateFmt = DateTimeFormatter.ofPattern("EEE, d MMM", Locale.getDefault())
 private fun dayKey(ms: Long) = Instant.ofEpochMilli(ms).atZone(ZoneId.systemDefault()).toLocalDate().toEpochDay()
 
 @Composable
@@ -259,7 +256,7 @@ private fun ColumnScope.PageView(st: AppState) {
         LazyColumn(Modifier.fillMaxSize().padding(top = 4.dp), state = listState) {
             items(entries, key = { it.value.id }) { (idx, e) ->
                 Column(Modifier.widthIn(max = 820.dp).padding(start = 18.dp, end = 18.dp)) {
-                    if (idx in days) Txt(dateFmt.format(Instant.ofEpochMilli(e.createdAt).atZone(ZoneId.systemDefault())), Type.label, c.muted, Modifier.padding(start = 44.dp, top = 10.dp, bottom = 4.dp))
+                    if (idx in days) Txt(S.dayLabel(Instant.ofEpochMilli(e.createdAt).atZone(ZoneId.systemDefault())), Type.label, c.muted, Modifier.padding(start = 44.dp, top = 10.dp, bottom = 4.dp))
                     TaskRow(st, e, idx + 1)
                 }
             }

@@ -115,7 +115,12 @@ jobs:
         shell: bash
         run: |
           V="${TAG#v}"; V="${V%%-*}"   # установщики принимают только числовую версию
-          ./gradlew packageDistributionForCurrentOS -PappVersion="$V" -PupdateRepo="$GITHUB_REPOSITORY"
+          if [ "$RUNNER_OS" = "Windows" ]; then
+            # Свой установщик (Inno Setup): значок на рабочем столе, русский язык, проверка установки.
+            pwsh installer/build.ps1 -Version "$V"
+          else
+            ./gradlew packageReleaseDistributionForCurrentOS -PappVersion="$V" -PupdateRepo="$GITHUB_REPOSITORY"
+          fi
       - name: Release notes
         id: notes
         shell: bash
@@ -130,9 +135,8 @@ jobs:
           body_path: ${{ steps.notes.outputs.path }}
           generate_release_notes: ${{ steps.notes.outputs.generate }}
           files: |
-            desktop/build/compose/binaries/main/*/*.deb
-            desktop/build/compose/binaries/main/*/*.rpm
-            desktop/build/compose/binaries/main/*/*.msi
-            desktop/build/compose/binaries/main/*/*.exe
-            desktop/build/compose/binaries/main/*/*.dmg
+            desktop/build/compose/binaries/main-release/*/*.deb
+            desktop/build/compose/binaries/main-release/*/*.rpm
+            desktop/build/installer/*.exe
+            desktop/build/compose/binaries/main-release/*/*.dmg
           fail_on_unmatched_files: false

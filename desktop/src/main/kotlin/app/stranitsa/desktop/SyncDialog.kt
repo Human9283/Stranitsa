@@ -36,8 +36,6 @@ import kotlinx.coroutines.isActive
 import kotlinx.coroutines.withContext
 import java.time.Instant
 import java.time.ZoneId
-import java.time.format.DateTimeFormatter
-import java.util.Locale
 
 private sealed interface Step {
     data object Host : Step
@@ -115,13 +113,12 @@ fun SyncDialog(st: AppState) {
                         Txt(if (hostError) S.syncStartFail else S.syncWaiting, Type.ui, c.ink, Modifier.padding(top = 12.dp))
                         if (peers.isNotEmpty()) {
                             Txt(S.syncKnown, Type.label, c.muted, Modifier.padding(top = 18.dp, bottom = 4.dp))
-                            val fmt = DateTimeFormatter.ofPattern("d MMM, HH:mm", Locale.getDefault())
                             peers.forEach { p ->
                                 Hairline()
                                 Row(Modifier.fillMaxWidth().heightIn(min = 44.dp), verticalAlignment = Alignment.CenterVertically) {
                                     Column(Modifier.weight(1f)) {
                                         Txt(p.name, Type.ui)
-                                        if (p.lastSync > 0) Txt(S.syncLast(fmt.format(Instant.ofEpochMilli(p.lastSync).atZone(ZoneId.systemDefault()))), Type.meta, c.muted)
+                                        if (p.lastSync > 0) Txt(S.syncLast(S.dayTime(Instant.ofEpochMilli(p.lastSync).atZone(ZoneId.systemDefault()))), Type.meta, c.muted)
                                     }
                                     Btn(S.forget, { st.core.forgetPeer(p.deviceId); peers = st.core.syncPeers() })
                                 }

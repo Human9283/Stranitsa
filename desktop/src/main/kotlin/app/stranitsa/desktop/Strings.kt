@@ -191,6 +191,18 @@ class Str(private val ru: Boolean) {
         val w = when { m10 == 1 && m100 != 11 -> one; m10 in 2..4 && m100 !in 12..14 -> few; else -> many }
         return "$n $w"
     }
+
+    // Названия дней и месяцев свои, а не из Java: в установленной программе урезанная Java без
+    // языковых данных (jdk.localedata), и даты выходили бы по-английски при русской системе.
+    private val weekdays = if (ru) listOf("пн", "вт", "ср", "чт", "пт", "сб", "вс") else listOf("Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun")
+    private val months = if (ru) listOf("янв.", "февр.", "мар.", "апр.", "мая", "июн.", "июл.", "авг.", "сент.", "окт.", "нояб.", "дек.")
+    else listOf("Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec")
+
+    /** «пн, 9 нояб.» / «Mon, 9 Nov». */
+    fun dayLabel(t: java.time.ZonedDateTime) = "${weekdays[t.dayOfWeek.value - 1]}, ${t.dayOfMonth} ${months[t.monthValue - 1]}"
+
+    /** «9 нояб., 14:05» / «9 Nov, 14:05». */
+    fun dayTime(t: java.time.ZonedDateTime) = "${t.dayOfMonth} ${months[t.monthValue - 1]}, %02d:%02d".format(t.hour, t.minute)
 }
 
 val S = Str(Locale.getDefault().language == "ru")

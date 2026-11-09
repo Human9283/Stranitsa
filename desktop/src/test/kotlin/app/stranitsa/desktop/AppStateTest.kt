@@ -101,3 +101,14 @@ class AppStateTest {
         assertNull(st.cleanupUndo)
     }
 }
+
+class DatesTest {
+    @Test fun datesDoNotDependOnJavaLocaleData() {
+        val t = java.time.ZonedDateTime.of(2026, 11, 9, 14, 5, 0, 0, java.time.ZoneId.of("UTC"))
+        val ru = Str(true); val en = Str(false)
+        assertEquals("пн, 9 нояб.", ru.dayLabel(t))
+        assertEquals("9 нояб., 14:05", ru.dayTime(t))
+        assertEquals("Mon, 9 Nov", en.dayLabel(t))
+        assertEquals("9 Nov, 14:05", en.dayTime(t))
+    }
+}
