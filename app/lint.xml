@@ -1,0 +1,8 @@
+<?xml version="1.0" encoding="utf-8"?>
+<lint>
+    <!-- Сгенерированные привязки UniFFI сами выбирают Cleaner во время работы (Class.forName),
+         на Android до 13 используется запасной вариант на JNA — предупреждение ложное. -->
+    <issue id="NewApi">
+        <ignore path="**/build/generated/**" />
+    </issue>
+</lint>

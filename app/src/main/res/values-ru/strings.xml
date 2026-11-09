@@ -45,7 +45,6 @@
     <string name="next_page_plain">Следующая страница</string>
     <string name="next_nothing">Ничего не выделилось</string>
     <string name="next_passed">Пройдена, дальше</string>
-    <string name="next_target">стр. %1$s →</string>
 
     <!-- Состояния строк -->
     <string name="meta_reentered">→ в конец</string>

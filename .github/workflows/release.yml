@@ -58,4 +58,10 @@ jobs:
         run: ./gradlew packageDistributionForCurrentOS -PappVersion="${GITHUB_REF_NAME#v}" -PupdateRepo="$GITHUB_REPOSITORY"
       - uses: softprops/action-gh-release@v2
         with:
-          files: desktop/build/compose/binaries/main/*/*
+          files: |
+            desktop/build/compose/binaries/main/*/*.deb
+            desktop/build/compose/binaries/main/*/*.rpm
+            desktop/build/compose/binaries/main/*/*.msi
+            desktop/build/compose/binaries/main/*/*.exe
+            desktop/build/compose/binaries/main/*/*.dmg
+          fail_on_unmatched_files: false

@@ -44,7 +44,6 @@
     <string name="next_page_plain">Next page</string>
     <string name="next_nothing">Nothing stood out</string>
     <string name="next_passed">Page done, next</string>
-    <string name="next_target">p. %1$s →</string>
 
     <!-- Row states -->
     <string name="meta_reentered">→ to end</string>
