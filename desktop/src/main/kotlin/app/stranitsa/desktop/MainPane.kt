@@ -100,15 +100,6 @@ fun Sidebar(st: AppState) {
             }
         }
         Box(Modifier.weight(1f))
-        st.update?.let { u ->
-            Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp)) {
-                Txt(S.updateAvailable(u.version), Type.ui, c.ink)
-                Row(Modifier.padding(top = 4.dp)) {
-                    Btn(S.download, { Updates.open(u.assetUrl ?: u.pageUrl) }, Kind.Filled)
-                    Btn(S.later, { st.update = null })
-                }
-            }
-        }
         val dismissed = s.dismissedForReview.size
         SideItem(Glyph.Archive, S.dismissed, if (dismissed > 0) dismissed.toString() else null, st.view == View.Dismissed) { st.view = View.Dismissed }
         SideItem(Glyph.Sync, S.sync, null, false) { st.dialog = Dialog.Sync }
@@ -233,6 +224,7 @@ private fun ColumnScope.PageView(st: AppState) {
         else -> S.hintCircle
     }
     if (hint != null) Txt(hint, Type.ui, c.ink, Modifier.padding(start = 28.dp, end = 28.dp, bottom = 10.dp))
+    st.update?.let { UpdateBanner(st, it) }
     if (st.breakDays > 0) {
         Row(Modifier.padding(start = 28.dp, end = 20.dp, bottom = 10.dp), verticalAlignment = Alignment.CenterVertically) {
             Txt(S.breakBanner(st.breakDays), Type.ui, c.ink, Modifier.weight(1f, fill = false))
@@ -345,7 +337,18 @@ private fun androidx.compose.foundation.layout.RowScope.EditField(st: AppState, 
 @Composable
 private fun UndoBar(st: AppState) {
     val c = Ui.c
-    val b = st.bar ?: return
+    val b = st.bar
+    if (b == null) {
+        // Очистку из настроек можно отменить, пока после неё ничего не менялось.
+        st.cleanupUndo?.let { n ->
+            Hairline()
+            Row(Modifier.fillMaxWidth().height(36.dp).padding(start = 28.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
+                Txt(S.cleanupUndoBar(n), Type.meta.copy(fontSize = Type.ui.fontSize * 0.93f), c.muted, Modifier.weight(1f), maxLines = 1)
+                Btn(S.undo, { st.undo() }, Kind.Accent, "Ctrl+Z")
+            }
+        }
+        return
+    }
     LaunchedEffect(b.id) { delay(6000); if (st.bar?.id == b.id) st.bar = null }
     Hairline()
     Row(Modifier.fillMaxWidth().height(36.dp).padding(start = 28.dp, end = 16.dp), verticalAlignment = Alignment.CenterVertically) {
@@ -523,5 +526,49 @@ private fun ColumnScope.ReviewView(st: AppState) {
             }
         }
         item { Spacer(h = 24.dp) }
+    }
+}
+
+/** Плашка обновления: «Доступна версия» → «Загрузка…» → «Установить». Файл скачивается внутри программы. */
+@Composable
+private fun UpdateBanner(st: AppState, step: UpdateStep) {
+    val c = Ui.c
+    val v = step.release.version
+    var noOpen by remember(v) { mutableStateOf(false) }
+    val win = remember { System.getProperty("os.name").lowercase().contains("win") }
+    Column(Modifier.fillMaxWidth().padding(start = 28.dp, end = 20.dp, bottom = 10.dp)) {
+        when (step) {
+            is UpdateStep.Available -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Txt(S.updateAvailable(v), Type.ui, c.ink, Modifier.weight(1f, fill = false)); Spacer(w = 12.dp)
+                if (step.release.assetUrl != null) Btn(S.updateDo, { st.downloadUpdate() }, Kind.Filled)
+                else Btn(S.updateOpenPage, { Updates.open(step.release.pageUrl); st.dismissUpdate() }, Kind.Filled)
+                Btn(S.later, { st.dismissUpdate() })
+            }
+            is UpdateStep.Downloading -> Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Txt(S.updateDownloading(v), Type.ui, c.ink, Modifier.weight(1f, fill = false)); Spacer(w = 12.dp)
+                    if (step.percent >= 0) Txt("${step.percent}%", Type.meta, c.muted)
+                    Spacer(w = 12.dp)
+                    Btn(S.cancel, { st.cancelDownload() })
+                }
+                Box(Modifier.padding(top = 6.dp).fillMaxWidth().height(4.dp).background(c.rule)) {
+                    val f = if (step.percent >= 0) step.percent / 100f else 0.15f
+                    Box(Modifier.fillMaxWidth(f.coerceIn(0f, 1f)).height(4.dp).background(c.accent))
+                }
+            }
+            is UpdateStep.Ready -> Column {
+                Row(verticalAlignment = Alignment.CenterVertically) {
+                    Txt(S.updateReady(v), Type.ui, c.ink, Modifier.weight(1f, fill = false)); Spacer(w = 12.dp)
+                    Btn(if (win) S.updateInstallWin else S.updateInstall, { noOpen = !st.installUpdate(step.file) }, Kind.Filled)
+                    Btn(S.later, { st.dismissUpdate() })
+                }
+                if (noOpen) Txt(S.updateNoOpen, Type.meta, c.muted, Modifier.padding(top = 4.dp))
+            }
+            is UpdateStep.Failed -> Row(verticalAlignment = Alignment.CenterVertically) {
+                Txt(S.updateFailed(step.message), Type.ui, c.ink, Modifier.weight(1f, fill = false)); Spacer(w = 12.dp)
+                Btn(S.retry, { st.downloadUpdate() }, Kind.Filled)
+                Btn(S.close, { st.dismissUpdate() })
+            }
+        }
     }
 }

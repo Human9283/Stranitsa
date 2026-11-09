@@ -54,7 +54,24 @@ class AppState(val core: StCore, private val clock: () -> Long = System::current
     var breakDays by mutableIntStateOf(0)
     var searchIndex by mutableIntStateOf(0)
     val autoSync = AutoSync(this)
-    var update by mutableStateOf<Release?>(null)
+    var update by mutableStateOf<UpdateStep?>(null)
+    @Volatile private var downloading = false
+    /** Номер загрузки: отмена и новая загрузка не должны мешать друг другу. */
+    @Volatile private var generation = 0
+    /** Закрыть программу целиком — нужно Windows, чтобы установщик мог заменить файлы. Задаётся в Main. */
+    var quit: () -> Unit = {}
+
+    /** Растёт при каждом изменении данных: по нему видно, что после очистки уже что-то менялось. */
+    var revision by mutableIntStateOf(0); private set
+    private var cleaned by mutableStateOf<Pair<Int, Int>?>(null)
+    /** Сколько строк убрала очистка, если её ещё можно отменить. */
+    val cleanupUndo: Int? get() = cleaned?.takeIf { it.second == revision }?.first
+
+    fun cleanup(days: Int) {
+        val count = core.cleanupPreview(days, clock())
+        apply { c, n -> c.cleanup(days, n) }
+        cleaned = count to revision
+    }
     /** Описание сбоя прошлого запуска — при запуске предлагаем отправить отчёт. */
     var crash by mutableStateOf(Diagnostics.pendingCrash())
 
@@ -66,8 +83,58 @@ class AppState(val core: StCore, private val clock: () -> Long = System::current
     /** Раз в запуск: не вышла ли новая версия (если включено в настройках). */
     fun checkUpdates() {
         if (!snap.settings.checkUpdates || Updates.current == "0") return
-        Thread { Updates.fetchLatest()?.takeIf { Updates.isNewer(it.version, Updates.current) }?.let { r -> javax.swing.SwingUtilities.invokeLater { update = r } } }
-            .apply { isDaemon = true }.start()
+        Thread {
+            val r = Updates.fetchLatest()
+            javax.swing.SwingUtilities.invokeLater {
+                if (r != null && Updates.isNewer(r.version, Updates.current)) {
+                    // Файл этой версии уже скачан раньше (и проверен): сразу «Установить».
+                    val f = Updates.fileFor(Updates.dir(), r)
+                    update = if (r.assetUrl != null && f.isFile) UpdateStep.Ready(r, f) else UpdateStep.Available(r)
+                } else Updates.cleanOld(Updates.dir(), null)
+            }
+        }.apply { isDaemon = true }.start()
+    }
+
+    /** «Обновить»: скачать установщик внутри программы. */
+    fun downloadUpdate() {
+        val r = update?.release ?: return
+        if (r.assetUrl == null || downloading) return
+        downloading = true
+        val mine = ++generation
+        update = UpdateStep.Downloading(r, 0)
+        Diagnostics.log("update: download ${r.version}")
+        Thread {
+            val result = runCatching {
+                Updates.cleanOld(Updates.dir(), r)
+                Updates.download(r, Updates.dir(), cancelled = { generation != mine }) { done, total ->
+                    val p = if (total > 0) (done * 100 / total).toInt() else -1
+                    javax.swing.SwingUtilities.invokeLater { if ((update as? UpdateStep.Downloading)?.percent != p && update is UpdateStep.Downloading) update = UpdateStep.Downloading(r, p) }
+                }
+            }
+            javax.swing.SwingUtilities.invokeLater {
+                val current = generation == mine
+                if (current) downloading = false
+                result.onSuccess { if (current && update is UpdateStep.Downloading) update = UpdateStep.Ready(r, it) }
+                    .onFailure {
+                        // Отмену уже обработали кнопки «Отмена» и «Не сейчас».
+                        if (current && it.message != "cancelled") {
+                            Diagnostics.log("update: download failed (${it.message})")
+                            update = UpdateStep.Failed(r, it.message ?: it.javaClass.simpleName)
+                        }
+                    }
+            }
+        }.apply { isDaemon = true; name = "stranitsa-update" }.start()
+    }
+
+    fun cancelDownload() { generation++; downloading = false; update?.release?.let { update = UpdateStep.Available(it) } }
+    fun dismissUpdate() { generation++; downloading = false; update = null }
+
+    /** Открыть скачанный установщик. На Windows программа закрывается, чтобы установщик мог заменить файлы. */
+    fun installUpdate(file: File): Boolean {
+        val ok = runCatching { java.awt.Desktop.getDesktop().open(file) }.isSuccess
+        if (!ok) { runCatching { java.awt.Desktop.getDesktop().open(file.parentFile) }; return false }
+        if (System.getProperty("os.name").lowercase().contains("win")) quit()
+        return true
     }
 
     fun searchHits(): List<app.stranitsa.core.SearchHit> = if (query.isBlank()) emptyList() else core.search(query, includeClosed)
@@ -76,6 +143,7 @@ class AppState(val core: StCore, private val clock: () -> Long = System::current
 
     private fun publish(s: Snapshot) {
         snap = s
+        revision++
         if (s.currentPage != knownCurrent) {
             // Рабочая страница сменилась (дальше / отбрасывание / первая задача) — показываем её.
             knownCurrent = s.currentPage

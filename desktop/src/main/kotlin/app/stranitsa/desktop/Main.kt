@@ -80,6 +80,7 @@ fun main() {
             prefs.putBoolean("sidebar", st.sidebar)
             exitApplication()
         }
+        st.quit = ::quit
         val icon = remember { runCatching { BitmapPainter(Thread.currentThread().contextClassLoader.getResourceAsStream("icon.png")!!.use(::loadImageBitmap)) }.getOrNull() }
         Window(
             onCloseRequest = ::quit, state = ws, icon = icon,
@@ -135,6 +136,7 @@ private fun FrameWindowScope.AppMenu(st: AppState, quit: () -> Unit) {
     MenuBar {
         Menu(S.menuFile, mnemonic = if (S.menuFile == "File") 'F' else 'Ф') {
             Item(S.newTask, onClick = { st.view = View.Page; st.focusNewTask++ }, shortcut = shortcut(Key.N))
+            Item(S.undo, onClick = { st.undo() }, enabled = st.snap.canUndo)
             Item(S.newList, onClick = { st.sidebar = true }, shortcut = shortcut(Key.N, shift = true))
             Separator()
             Item(S.sync, onClick = { st.dialog = Dialog.Sync })

@@ -297,4 +297,16 @@
     <string name="report_intro">**Что случилось?**\n\n(Опишите, что вы делали и что пошло не так.)</string>
     <string name="crash_banner">В прошлый раз приложение закрылось с ошибкой. Отправить отчёт?</string>
     <string name="crash_view">Посмотреть</string>
+    <string name="update_do">Обновить</string>
+    <string name="update_open_page">Открыть страницу</string>
+    <string name="update_downloading">Загрузка версии %1$s…</string>
+    <string name="update_percent">%1$d%%</string>
+    <string name="update_cancel">Отмена</string>
+    <string name="update_ready">Версия %1$s скачана и проверена.</string>
+    <string name="update_install">Установить</string>
+    <string name="update_failed">Не удалось скачать обновление: %1$s</string>
+    <string name="update_retry">Повторить</string>
+    <string name="update_allow">Разрешите установку из «Страницы» в открывшихся настройках, вернитесь и нажмите «Установить» ещё раз.</string>
+    <string name="update_close">Закрыть</string>
+    <string name="cleanup_undo_bar">Убрано строк: %1$d</string>
 </resources>

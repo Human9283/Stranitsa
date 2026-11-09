@@ -3,6 +3,9 @@ package app.stranitsa
 import app.stranitsa.core.StCore
 import app.stranitsa.core.SearchHit
 import app.stranitsa.core.Snapshot
+import androidx.compose.runtime.getValue
+import androidx.compose.runtime.mutableIntStateOf
+import androidx.compose.runtime.setValue
 import kotlinx.coroutines.flow.MutableStateFlow
 import kotlinx.coroutines.flow.StateFlow
 import kotlinx.coroutines.flow.asStateFlow
@@ -24,6 +27,10 @@ class StRepository(
     private val _state = MutableStateFlow(core.snapshot())
     val state: StateFlow<Snapshot> = _state.asStateFlow()
 
+    /** Растёт при каждом изменении данных — по нему видно, что после очистки уже что-то менялось. */
+    var revision by mutableIntStateOf(0)
+        private set
+
     init {
         onBackupFlag(_state.value.settings.systemBackup)
     }
@@ -34,6 +41,7 @@ class StRepository(
         val old = _state.value
         val new = action(core, clock())
         _state.value = new
+        revision++
         onChanged(new)
         if (new.settings.systemBackup != old.settings.systemBackup) onBackupFlag(new.settings.systemBackup)
         return new
@@ -43,6 +51,7 @@ class StRepository(
     @Synchronized
     fun refresh() {
         _state.value = core.snapshot()
+        revision++
         onChanged(_state.value)
     }
 

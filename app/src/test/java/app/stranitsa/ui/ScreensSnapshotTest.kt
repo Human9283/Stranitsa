@@ -269,6 +269,14 @@ Events (UTC):
         ReportScreen({ sample }, onSent = {}, onBack = {})
     }
 
+    private val rel = app.stranitsa.Release("1.0.2", "https://github.com/o/r/releases/tag/v1.0.2", "https://github.com/o/r/releases/download/v1.0.2/a.apk")
+    private fun withUpdate(step: app.stranitsa.UpdateStep) = shot { MainScreen(ruCore().snapshot(), NoActions, onOpen = {}, update = step) }
+    @Test fun update_available() = withUpdate(app.stranitsa.UpdateStep.Available(rel))
+    @Test fun update_downloading() = withUpdate(app.stranitsa.UpdateStep.Downloading(rel, 42))
+    @Test fun update_ready() = withUpdate(app.stranitsa.UpdateStep.Ready(rel, java.io.File("a.apk")))
+    @Test fun update_failed() = withUpdate(app.stranitsa.UpdateStep.Failed(rel, "HTTP 404"))
+    @Test fun main_cleanupUndo() = shot { MainScreen(ruCore().snapshot(), NoActions, onOpen = {}, cleanupUndo = 12) }
+
     @Test fun main_crashed() = shot { MainScreen(ruCore().snapshot(), NoActions, onOpen = {}, crashed = true) }
 
     // ---------- синхронизация ----------

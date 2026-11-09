@@ -67,9 +67,14 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
     var breakDays by mutableIntStateOf(0)
         private set
 
-    /** Вышла новая версия (проверка раз в 12 часов, если включена в настройках). */
-    var update by mutableStateOf<Release?>(null)
+    /** Обновление: вышла новая версия → загрузка → установка (проверка раз в 12 часов, если включена). */
+    var update by mutableStateOf<UpdateStep?>(null)
         private set
+    private var downloadJob: Job? = null
+
+    /** Сколько строк убрала последняя очистка, пока после неё ничего не менялось (чтобы можно было отменить). */
+    private var cleaned by mutableStateOf<Pair<Int, Int>?>(null)
+    val cleanupUndo: Int? get() = cleaned?.takeIf { it.second == repo.revision }?.first
     /** Когда и с кем в последний раз прошла автосинхронизация. */
     var lastAutoSync by mutableStateOf<Pair<Long, String>?>(null)
         private set
@@ -133,18 +138,64 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
         val last = prefs.getLong("checked", 0)
         val cached = prefs.getString("version", null)
         if (cached != null && Updates.isNewer(cached, BuildConfig.VERSION_NAME)) {
-            update = Release(cached, prefs.getString("page", "")!!, prefs.getString("apk", null))
+            val r = Release(
+                cached, prefs.getString("page", "")!!, prefs.getString("apk", null),
+                prefs.getString("sha", null), prefs.getLong("size", -1).takeIf { it > 0 },
+            )
+            if (update == null) showUpdate(r)
+        } else {
+            // Уже обновились (или обновлений нет): скачанное больше не нужно.
+            Updates.cleanOld(UpdateInstaller.dir(getApplication()), null)
         }
         if (now() - last < 12 * 60 * 60 * 1000L) return
         viewModelScope.launch {
             val r = withContext(Dispatchers.IO) { Updates.fetchLatest() } ?: return@launch
             prefs.edit().putLong("checked", now()).putString("version", r.version)
-                .putString("page", r.pageUrl).putString("apk", r.apkUrl).apply()
-            update = r.takeIf { Updates.isNewer(it.version, BuildConfig.VERSION_NAME) }
+                .putString("page", r.pageUrl).putString("apk", r.apkUrl)
+                .putString("sha", r.apkSha256).putLong("size", r.apkSize ?: -1).apply()
+            if (Updates.isNewer(r.version, BuildConfig.VERSION_NAME)) { if (update == null) showUpdate(r) } else update = null
         }
     }
 
-    fun dismissUpdate() { update = null }
+    /** Показать плашку; если файл этой версии уже скачан (и проверен) — сразу «Установить». */
+    private fun showUpdate(r: Release) {
+        val dir = UpdateInstaller.dir(getApplication())
+        val file = Updates.fileFor(dir, r)
+        update = if (r.apkUrl != null && file.isFile) UpdateStep.Ready(r, file) else UpdateStep.Available(r)
+    }
+
+    /** «Обновить»: скачать файл внутри приложения. */
+    fun downloadUpdate() {
+        val r = update?.release ?: return
+        if (r.apkUrl == null || update is UpdateStep.Downloading) return
+        update = UpdateStep.Downloading(r, 0)
+        Diagnostics.log("update: download ${r.version}")
+        downloadJob = viewModelScope.launch {
+            val dir = UpdateInstaller.dir(getApplication())
+            val result = withContext(Dispatchers.IO) {
+                runCatching {
+                    Updates.cleanOld(dir, r)
+                    Updates.download(r, dir, cancelled = { downloadJob?.isActive != true }) { done, total ->
+                        val p = if (total > 0) (done * 100 / total).toInt() else -1
+                        val cur = update
+                        if (cur is UpdateStep.Downloading && cur.percent != p) update = UpdateStep.Downloading(r, p)
+                    }
+                }
+            }
+            result.onSuccess { if (update is UpdateStep.Downloading) update = UpdateStep.Ready(r, it) }
+                .onFailure {
+                    // Отмена: плашку уже поменяла кнопка «Отмена» или «Не сейчас».
+                    if (it.message != "cancelled") {
+                        Diagnostics.log("update: download failed (${it.message})")
+                        update = UpdateStep.Failed(r, it.message ?: it.javaClass.simpleName)
+                    }
+                }
+        }
+    }
+
+    fun cancelDownload() { downloadJob?.cancel(); downloadJob = null; update?.release?.let { update = UpdateStep.Available(it) } }
+
+    fun dismissUpdate() { downloadJob?.cancel(); downloadJob = null; update = null }
 
     /** Файл пишется в фоне; уходя с экрана, дожидаемся, чтобы он точно оказался на диске. */
     fun flush() = repo.flush()
@@ -174,7 +225,11 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
     override fun renameList(id: String, name: String) { repo.apply { c, n -> c.renameList(id, name, n) } }
     override fun deleteList(id: String) { repo.apply { c, n -> c.deleteList(id, n) } }
     override fun cleanupPreview(days: Int) = repo.core.cleanupPreview(days, now())
-    override fun cleanup(days: Int) { repo.apply { c, n -> c.cleanup(days, n) } }
+    override fun cleanup(days: Int) {
+        val count = repo.core.cleanupPreview(days, now())
+        repo.apply { c, n -> c.cleanup(days, n) }
+        cleaned = count to repo.revision
+    }
     override fun search(query: String, includeClosed: Boolean) = repo.search(query, includeClosed)
     override fun doneSince(since: Long) = repo.doneSince(since)
     override fun exportJson(): String = repo.exportJson()

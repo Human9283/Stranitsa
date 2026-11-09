@@ -141,8 +141,13 @@ fun MainScreen(
     breakDays: Int = 0,
     onDismissBreak: () -> Unit = {},
     /** Вышла новая версия — предложить скачать. */
-    update: app.stranitsa.Release? = null,
+    update: app.stranitsa.UpdateStep? = null,
+    onUpdateDownload: () -> Unit = {},
+    onUpdateCancel: () -> Unit = {},
     onDismissUpdate: () -> Unit = {},
+    /** Сколько строк убрала очистка, если её ещё можно отменить. */
+    cleanupUndo: Int? = null,
+    onUndoCleanup: () -> Unit = {},
     /** Прошлый запуск закончился сбоем — предложить отчёт. */
     crashed: Boolean = false,
     onDismissCrash: () -> Unit = {},
@@ -317,20 +322,7 @@ fun MainScreen(
                 }
             }
         }
-        if (update != null) {
-            val ctx = LocalContext.current
-            Hairline(Modifier.padding(top = 10.dp))
-            Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
-                Txt(stringResource(R.string.update_available, update.version), t.hint, c.ink, Modifier.weight(1f))
-                TextAction(stringResource(R.string.update_get), {
-                    runCatching {
-                        ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(update.apkUrl ?: update.pageUrl)))
-                    }
-                    onDismissUpdate()
-                }, color = c.accent)
-                TextAction(stringResource(R.string.break_later), onDismissUpdate, color = c.ink)
-            }
-        }
+        if (update != null) UpdateBanner(update, onUpdateDownload, onUpdateCancel, onDismissUpdate)
         // После долгого перерыва Форстер советует сначала прочитать все невыполненные задачи.
         if (breakDays > 0) {
             Hairline(Modifier.padding(top = 10.dp))
@@ -386,6 +378,18 @@ fun MainScreen(
             ) {
                 Txt(b.text, t.stats, c.muted, Modifier.weight(1f), maxLines = 1)
                 if (b.undoable) TextAction(stringResource(R.string.undo), { vm.undo(); bar = null }, color = c.accent)
+            }
+        }
+
+        // Очистку из настроек можно отменить, пока после неё ничего не менялось.
+        if (bar == null && cleanupUndo != null) {
+            Hairline()
+            Row(
+                Modifier.fillMaxWidth().padding(start = 20.dp, end = 14.dp).heightIn(min = 44.dp),
+                verticalAlignment = Alignment.CenterVertically,
+            ) {
+                Txt(stringResource(R.string.cleanup_undo_bar, cleanupUndo), t.stats, c.muted, Modifier.weight(1f), maxLines = 1)
+                TextAction(stringResource(R.string.undo), onUndoCleanup, color = c.accent)
             }
         }
 

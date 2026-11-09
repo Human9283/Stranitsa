@@ -169,7 +169,7 @@ fun SettingsDialog(st: AppState, dataFile: File, window: Frame?) {
                         Type.meta, if (confirm) c.ink else c.muted, Modifier.weight(1f),
                     )
                     when {
-                        confirm -> { Btn(S.remove, { st.apply { core, n -> core.cleanup(steps[pick], n) }; done = count; confirm = false }, Kind.Filled); Btn(S.cancel, { confirm = false }) }
+                        confirm -> { Btn(S.remove, { st.cleanup(steps[pick]); done = count; confirm = false }, Kind.Filled); Btn(S.cancel, { confirm = false }) }
                         done != null -> Btn(S.undo, { st.undo(); done = null }, Kind.Accent, "Ctrl+Z")
                         else -> Btn(S.remove, { confirm = true }, Kind.Accent, enabled = count > 0)
                     }

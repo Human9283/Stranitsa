@@ -281,4 +281,16 @@
     <string name="report_intro">**What happened?**\n\n(Describe what you were doing and what went wrong.)</string>
     <string name="crash_banner">The app closed with an error last time. Send a report?</string>
     <string name="crash_view">View report</string>
+    <string name="update_do">Update</string>
+    <string name="update_open_page">Open page</string>
+    <string name="update_downloading">Downloading version %1$s…</string>
+    <string name="update_percent">%1$d%%</string>
+    <string name="update_cancel">Cancel</string>
+    <string name="update_ready">Version %1$s is downloaded and checked.</string>
+    <string name="update_install">Install</string>
+    <string name="update_failed">Could not download the update: %1$s</string>
+    <string name="update_retry">Try again</string>
+    <string name="update_allow">Allow installing from Stranitsa in the settings that just opened, go back and tap Install again.</string>
+    <string name="update_close">Close</string>
+    <string name="cleanup_undo_bar">Removed lines: %1$d</string>
 </resources>

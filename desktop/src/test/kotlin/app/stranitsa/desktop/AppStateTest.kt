@@ -79,4 +79,24 @@ class AppStateTest {
         st.moveSelection(+1); st.delete()
         assertTrue(st.snap.dismissApplies)
     }
+
+    @Test fun cleanupCanBeUndoneUntilSomethingElseChanges() {
+        val core = StCore.inMemory(0)
+        repeat(3) { core.add("t$it", 0) }
+        core.snapshot().entries.forEach { core.done(it.id, 1) }
+        core.add("alive", 0)
+        val day = 86_400_000L
+        val st = AppState(core) { 200 * day }
+        assertNull(st.cleanupUndo)
+        st.cleanup(30)
+        assertEquals(3, st.cleanupUndo)
+        assertEquals(1, st.snap.entries.size)
+        st.undo()
+        assertNull(st.cleanupUndo)
+        assertEquals(4, st.snap.entries.size)
+        st.cleanup(30)
+        assertEquals(3, st.cleanupUndo)
+        st.add("another")          // после любого другого изменения предложение пропадает
+        assertNull(st.cleanupUndo)
+    }
 }

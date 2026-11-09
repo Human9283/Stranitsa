@@ -6,6 +6,10 @@ import androidx.compose.runtime.setValue
 import app.stranitsa.core.SyncHost
 import app.stranitsa.core.syncKnownNearby
 import java.awt.Desktop
+import java.io.File
+import java.io.IOException
+import java.io.InputStream
+import java.security.MessageDigest
 import java.net.HttpURLConnection
 import java.net.URI
 import java.net.URL
@@ -78,7 +82,23 @@ class AutoSync(private val st: AppState) {
 }
 
 /** Последний выпуск на GitHub; [assetUrl] — установщик для этой системы, если приложен. */
-data class Release(val version: String, val pageUrl: String, val assetUrl: String?)
+data class Release(
+    val version: String,
+    val pageUrl: String,
+    val assetUrl: String?,
+    val assetSha256: String? = null,
+    val assetSize: Long? = null,
+)
+
+/** Что показывает плашка обновления. */
+sealed interface UpdateStep {
+    val release: Release
+    data class Available(override val release: Release) : UpdateStep
+    /** [percent] = -1, если размер неизвестен. */
+    data class Downloading(override val release: Release, val percent: Int) : UpdateStep
+    data class Ready(override val release: Release, val file: File) : UpdateStep
+    data class Failed(override val release: Release, val message: String) : UpdateStep
+}
 
 object Updates {
     /** Откуда приходят обновления. Для закрытого репозитория GitHub без ключа отвечает 404. */
@@ -97,15 +117,21 @@ object Updates {
         parse(c.inputStream.bufferedReader().use { it.readText() })
     }.getOrNull()
 
-    fun parse(json: String): Release? {
+    fun parse(json: String, os: String = System.getProperty("os.name").lowercase()): Release? {
         val tag = Regex("\"tag_name\"\\s*:\\s*\"([^\"]+)\"").find(json)?.groupValues?.get(1) ?: return null
         val page = Regex("\"html_url\"\\s*:\\s*\"([^\"]+/releases/tag/[^\"]+)\"").find(json)?.groupValues?.get(1)
             ?: "https://github.com/$REPO/releases/latest"
-        val os = System.getProperty("os.name").lowercase()
         val ext = when { os.contains("win") -> listOf(".msi", ".exe"); os.contains("mac") -> listOf(".dmg"); else -> listOf(".deb", ".rpm") }
-        val urls = Regex("\"browser_download_url\"\\s*:\\s*\"([^\"]+)\"").findAll(json).map { it.groupValues[1] }.toList()
-        val asset = ext.firstNotNullOfOrNull { e -> urls.firstOrNull { it.endsWith(e) } }
-        return Release(tag.removePrefix("v"), page, asset)
+        val urls = Regex("\"browser_download_url\"\\s*:\\s*\"([^\"]+)\"").findAll(json).toList()
+        val m = ext.firstNotNullOfOrNull { e -> urls.firstOrNull { it.groupValues[1].endsWith(e) } }
+        // В описании файла «size» и «digest» стоят ДО ссылки — после ссылки предыдущего файла.
+        val before = m?.let {
+            val head = json.substring(0, it.range.first)
+            head.substring(head.lastIndexOf("\"browser_download_url\"").coerceAtLeast(0))
+        }
+        val sha = before?.let { Regex("\"digest\"\\s*:\\s*\"sha256:([0-9a-fA-F]{64})\"").findAll(it).lastOrNull()?.groupValues?.get(1) }
+        val size = before?.let { Regex("\"size\"\\s*:\\s*(\\d+)").findAll(it).lastOrNull()?.groupValues?.get(1)?.toLongOrNull() }
+        return Release(tag.removePrefix("v"), page, m?.groupValues?.get(1), sha?.lowercase(), size)
     }
 
     fun isNewer(candidate: String, current: String): Boolean {
@@ -119,4 +145,66 @@ object Updates {
     }
 
     fun open(url: String) { runCatching { Desktop.getDesktop().browse(URI(url)) } }
+
+    /** Папка для скачанных установщиков. */
+    fun dir(): File = File(System.getProperty("java.io.tmpdir"), "stranitsa-update")
+
+    /** Имя файла по версии и расширению: старый файл не принимается за новый. */
+    fun fileFor(dir: File, r: Release): File =
+        File(dir, "Stranitsa-${r.version}" + (r.assetUrl?.substringAfterLast('.')?.let { ".$it" } ?: ""))
+
+    fun cleanOld(dir: File, keep: Release?) {
+        dir.listFiles()?.forEach { if (keep == null || it != fileFor(dir, keep)) it.delete() }
+    }
+
+    /**
+     * Скачать установщик. Файл появляется под своим именем только после проверки размера и
+     * SHA-256 (если GitHub их сообщил). [onProgress] получает (скачано, всего); всего = -1, если неизвестно.
+     */
+    fun download(r: Release, dir: File, cancelled: () -> Boolean = { false }, onProgress: (Long, Long) -> Unit = { _, _ -> }): File {
+        val url = r.assetUrl ?: throw IOException("no file")
+        require(url.startsWith("https://")) { "only https" }
+        dir.mkdirs()
+        val c = URL(url).openConnection() as HttpURLConnection
+        c.connectTimeout = 10_000; c.readTimeout = 20_000
+        c.setRequestProperty("User-Agent", "Stranitsa")
+        try {
+            if (c.responseCode != 200) throw IOException("HTTP ${c.responseCode}")
+            val total = c.contentLengthLong.takeIf { it > 0 } ?: r.assetSize ?: -1
+            return c.inputStream.use { copyVerified(it, total, fileFor(dir, r), r.assetSha256, r.assetSize, cancelled, onProgress) }
+        } finally {
+            c.disconnect()
+        }
+    }
+
+    fun copyVerified(
+        input: InputStream, total: Long, dest: File, sha256: String?, expectedSize: Long?,
+        cancelled: () -> Boolean = { false }, onProgress: (Long, Long) -> Unit = { _, _ -> },
+    ): File {
+        val tmp = File(dest.path + ".part")
+        val md = MessageDigest.getInstance("SHA-256")
+        var done = 0L
+        try {
+            tmp.outputStream().use { out ->
+                val buf = ByteArray(64 * 1024)
+                var last = -1L
+                while (true) {
+                    if (cancelled()) throw IOException("cancelled")
+                    val n = input.read(buf)
+                    if (n < 0) break
+                    out.write(buf, 0, n); md.update(buf, 0, n); done += n
+                    if (done - last >= 256 * 1024 || done == total) { onProgress(done, total); last = done }
+                }
+            }
+            onProgress(done, total)
+            if (expectedSize != null && done != expectedSize) throw IOException("size $done, expected $expectedSize")
+            if (total > 0 && done != total) throw IOException("incomplete download")
+            if (sha256 != null && !md.digest().joinToString("") { "%02x".format(it) }.equals(sha256, ignoreCase = true)) throw IOException("checksum mismatch")
+            if (!tmp.renameTo(dest)) { dest.delete(); if (!tmp.renameTo(dest)) throw IOException("cannot save the file") }
+            return dest
+        } catch (e: Throwable) {
+            tmp.delete()
+            throw e
+        }
+    }
 }
