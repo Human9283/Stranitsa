@@ -23,6 +23,16 @@ $setup = Get-ChildItem build\installer\Stranitsa-Setup-*.exe | Select-Object -Fi
 if (-not $setup) { throw 'installer not found' }
 Write-Host ("Установщик: {0} ({1:N1} МБ)" -f $setup.Name, ($setup.Length / 1MB))
 
+# --- проверка: у человека стоит старая версия с установщиком MSI (до 1.0.3) ---
+$oldMsi = Join-Path $env:TEMP 'stranitsa-old.msi'
+$oldDir = Join-Path $env:LOCALAPPDATA 'Stranitsa'
+try {
+    Invoke-WebRequest 'https://github.com/Human9283/Stranitsa/releases/download/v1.0.2/Stranitsa-1.0.2.msi' -OutFile $oldMsi
+    Start-Process msiexec.exe -ArgumentList '/i', $oldMsi, '/qn' -Wait
+    if (-not (Test-Path (Join-Path $oldDir 'Stranitsa.exe'))) { throw 'старая версия MSI не установилась (для проверки)' }
+    Write-Host 'Для проверки установлена старая версия 1.0.2 (MSI).'
+} catch { Write-Host "::warning::проверку замены старой версии пропускаю: $_"; $oldMsi = $null }
+
 # --- проверка: установка без окон ---
 $log = Join-Path $env:RUNNER_TEMP 'stranitsa-install.log'
 if (-not $env:RUNNER_TEMP) { $log = Join-Path $env:TEMP 'stranitsa-install.log' }
@@ -35,6 +45,10 @@ foreach ($p in @($exe, $desktopLnk, $menuLnk, (Join-Path $app 'unins000.exe'))) 
     if (-not (Test-Path $p)) { Get-Content $log -ErrorAction SilentlyContinue | Select-Object -Last 40; throw "после установки нет: $p" }
 }
 Write-Host 'Установка: программа, значок на рабочем столе и в меню «Пуск» на месте.'
+if ($oldMsi) {
+    if (Test-Path (Join-Path $oldDir 'Stranitsa.exe')) { throw 'старая установка MSI не убрана' }
+    Write-Host 'Старая версия (MSI) убрана, программа не стоит дважды.'
+}
 
 # --- программа запускается и не падает ---
 $p = Start-Process $exe -PassThru
