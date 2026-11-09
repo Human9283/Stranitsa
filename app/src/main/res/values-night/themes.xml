@@ -1,0 +1,14 @@
+<resources>
+    <style name="Theme.Stranitsa" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowBackground">@color/app_bg</item>
+    </style>
+    <color name="app_bg">#131312</color>
+    <!-- Окно «Поделиться»: прозрачное, панель рисуется снизу поверх другого приложения. -->
+    <style name="Theme.Stranitsa.Share" parent="android:Theme.Material.NoActionBar">
+        <item name="android:windowIsTranslucent">true</item>
+        <item name="android:windowBackground">@android:color/transparent</item>
+        <item name="android:windowNoTitle">true</item>
+        <item name="android:backgroundDimEnabled">false</item>
+        <item name="android:windowAnimationStyle">@android:style/Animation.Translucent</item>
+    </style>
+</resources>

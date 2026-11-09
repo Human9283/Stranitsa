@@ -1,0 +1,11 @@
+.gradle/
+build/
+local.properties
+*.iml
+.idea/
+.kotlin/
+keystore/
+*.apk
+core/target/
+stranitsa-data/
+*.deb

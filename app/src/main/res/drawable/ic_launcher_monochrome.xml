@@ -1,0 +1,12 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Тематический значок (Android 13+): система берёт только прозрачность и красит в цвета обоев.
+     Вычеркнутая строка — полупрозрачная, выбранная — с чертой слева. -->
+<vector xmlns:android="http://schemas.android.com/apk/res/android"
+    android:width="108dp" android:height="108dp"
+    android:viewportWidth="108" android:viewportHeight="108">
+    <path android:fillColor="#FFFFFFFF" android:pathData="M42,38h30v3.2h-30z"/>
+    <path android:fillColor="#66FFFFFF" android:pathData="M42,48h24v3.2h-24z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M42,58h28v3.2h-28z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M34.5,55h3.4v9.2h-3.4z"/>
+    <path android:fillColor="#FFFFFFFF" android:pathData="M42,68h18v3.2h-18z"/>
+</vector>
