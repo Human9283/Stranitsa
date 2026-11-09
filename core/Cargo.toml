@@ -1,0 +1,51 @@
+[package]
+name = "stranitsa-core"
+version = "0.1.0"
+edition = "2021"
+description = "Stranitsa core (method: Autofocus 1 by Mark Forster): list rules, storage, migration and merge — shared by Android, iOS and desktop."
+license = "MIT"
+publish = false
+
+[lib]
+name = "stranitsa_core"
+crate-type = ["cdylib", "staticlib", "lib"]
+
+[[bin]]
+name = "uniffi-bindgen"
+path = "src/bin/uniffi-bindgen.rs"
+required-features = ["bindgen"]
+
+[[bin]]
+name = "stranitsa"
+path = "src/bin/stranitsa.rs"
+required-features = ["cli"]
+
+[features]
+bindgen = ["uniffi/cli"]
+cli = ["dep:png"]
+
+[dependencies]
+serde = { version = "1", features = ["derive"] }
+serde_json = "1"
+uniffi = "0.29"
+uuid = { version = "1", features = ["v4"] }
+thiserror = "2"
+# синхронизация
+snow = "0.9"
+mdns-sd = "0.13"
+if-addrs = "0.13"
+qrcode = { version = "0.14", default-features = false }
+rqrr = "0.9"
+base64 = "0.22"
+getrandom = "0.3"
+png = { version = "0.17", optional = true }
+
+[dev-dependencies]
+tempfile = "3"
+
+[profile.release]
+opt-level = "s"
+lto = true
+codegen-units = 1
+panic = "abort"
+strip = true

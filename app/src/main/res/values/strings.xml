@@ -1,0 +1,242 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- English is the default locale; Russian lives in values-ru. -->
+<resources>
+    <string name="app_name">Stranitsa</string>
+
+    <!-- Header and menu -->
+    <string name="menu">Menu</string>
+    <string name="menu_dismissed">Dismissed</string>
+    <string name="menu_settings">Settings</string>
+    <string name="menu_howto">How the method works</string>
+    <string name="page_of">of %1$s</string>
+    <string name="prev_page">Previous page</string>
+    <string name="next_page">Next page</string>
+    <string name="active_count">active %1$d</string>
+    <string name="done_today">done today %1$d</string>
+    <string name="review_count">review %1$d →</string>
+
+    <!-- Hints under the page number -->
+    <string name="hint_viewing">You’re viewing page %1$s. Your working page is %2$s.</string>
+    <string name="hint_closed">Everything on this page is closed.</string>
+    <string name="hint_first_pass">Skim the page, then go slowly until something stands out.</string>
+    <string name="hint_circle">Circle this page. An empty pass — move on.</string>
+
+    <!-- Message line above the input -->
+    <string name="bar_added">Added to the end · p. %1$s</string>
+    <string name="bar_done">Done · %1$s</string>
+    <string name="bar_reentered">To the end · %1$s</string>
+    <string name="bar_deleted">Deleted · %1$s</string>
+    <plurals name="bar_dismissed">
+        <item quantity="one">Dismissed: %d task</item>
+        <item quantity="other">Dismissed: %d tasks</item>
+    </plurals>
+    <string name="undo">Undo</string>
+
+    <!-- Input -->
+    <string name="new_task">New task</string>
+    <string name="first_task">First task</string>
+    <string name="add">Add</string>
+
+    <!-- “Next” row -->
+    <string name="next_back">Back to page %1$s</string>
+    <string name="next_all_closed">All tasks are closed</string>
+    <string name="next_no_other">No other pages</string>
+    <string name="next_page_plain">Next page</string>
+    <string name="next_nothing">Nothing stood out</string>
+    <string name="next_passed">Page done, next</string>
+    <string name="next_target">p. %1$s →</string>
+
+    <!-- Row states -->
+    <string name="meta_reentered">→ to end</string>
+    <string name="meta_dismissed">dismissed</string>
+    <string name="meta_deleted">deleted</string>
+    <string name="state_new">not started</string>
+    <string name="state_in_progress">in progress, moved: %1$d</string>
+    <string name="state_done">done</string>
+    <string name="state_reentered">moved to the end</string>
+    <string name="state_dismissed">dismissed</string>
+    <string name="state_deleted">deleted</string>
+
+    <!-- Row actions -->
+    <string name="act_show">Show actions</string>
+    <string name="act_done">Done</string>
+    <string name="act_not_finished">Not finished</string>
+    <string name="act_not_finished_long">Worked on it, not finished</string>
+    <string name="act_edit">Edit</string>
+    <string name="act_save">Save</string>
+    <string name="act_cancel">Cancel</string>
+    <string name="act_delete">Delete</string>
+    <string name="swipe_to_end">To end</string>
+
+    <!-- Dismiss confirmation -->
+    <string name="confirm_keep">Keep</string>
+
+    <!-- First run -->
+    <string name="first_title">Write down everything on your mind.</string>
+    <string name="first_lead">One task per line. Don’t judge or sort — the system will do that for you.</string>
+    <string-array name="first_steps">
+        <item>Read the page quickly without doing anything.</item>
+        <item>Go slowly until something stands out. Work on it for as long as you like.</item>
+        <item>Not finished? The task goes to the end of the list.</item>
+    </string-array>
+    <string name="first_note">Things with a fixed time — meetings, cooking, shutting the shop — belong in a calendar, not here.</string>
+
+    <!-- Dismissed screen -->
+    <string name="back">Back</string>
+    <string name="dismissed_lead">The system has filtered these tasks out. Don’t bring them back right away: ask whether they’re needed at all and whether their time has come. When you do, reword them or keep only the first step.</string>
+    <string name="dismissed_empty">Nothing to review.</string>
+    <string name="dismissed_on">dismissed %1$s</string>
+    <string name="revive">Bring back</string>
+    <string name="revive_to_end">Back to the end</string>
+    <string name="forget">Forget</string>
+
+    <!-- Lists -->
+    <string name="list_default">My list</string>
+    <string name="menu_lists">Lists</string>
+    <string name="lists_lead">Forster recommends a separate list for each place — for example, Home and Work. Each list has its own pages.</string>
+    <string name="lists_new">New list, e.g. Home or Work</string>
+    <string name="list_meta">active %1$d · p. %2$s of %3$s</string>
+    <string name="list_delete_confirm">Delete “%1$s” with all its tasks?</string>
+    <string name="list_create">Create</string>
+    <string name="share_to_list">List:</string>
+
+    <!-- After a break -->
+    <plurals name="break_banner">
+        <item quantity="one">You haven’t opened the list for %d day. Forster suggests reading all outstanding tasks first.</item>
+        <item quantity="other">You haven’t opened the list for %d days. Forster suggests reading all outstanding tasks first.</item>
+    </plurals>
+    <string name="break_read">Read all</string>
+    <string name="break_later">Not now</string>
+    <string name="menu_review">Read all tasks</string>
+    <string name="review_title">All outstanding</string>
+    <string name="review_lead">Just read through — no need to act. It gives your mind an overview. Tap a task to open its page.</string>
+    <string name="review_page">Page %1$s</string>
+    <string name="review_done">Done reading</string>
+
+    <!-- Sync -->
+    <string name="menu_sync">Sync</string>
+    <string name="sync_lead">Devices on the same Wi-Fi exchange lists directly — no cloud. Everything is encrypted.</string>
+    <string name="sync_show_qr">Show QR code</string>
+    <string name="sync_show_qr_hint">The other device scans it</string>
+    <string name="sync_scan">Scan QR code</string>
+    <string name="sync_scan_hint">On the computer: stranitsa host</string>
+    <string name="sync_nearby">Find nearby</string>
+    <string name="sync_nearby_hint">Without QR: you will compare a 6-digit code</string>
+    <string name="sync_known">Known devices</string>
+    <string name="sync_never">not synced yet</string>
+    <string name="sync_last">last sync %1$s</string>
+    <string name="sync_now">Sync</string>
+    <string name="sync_forget">Forget</string>
+    <string name="sync_visible">This device is visible as “%1$s”. Keep this screen open until the other device connects.</string>
+    <string name="sync_waiting">Waiting for a device…</string>
+    <string name="sync_searching">Looking for devices… On the other device, open Sync → Show QR code.</string>
+    <string name="sync_nobody">Nobody found yet. Both devices must be on the same Wi-Fi.</string>
+    <string name="sync_known_mark">known</string>
+    <string name="sync_connecting">Connecting to “%1$s”…</string>
+    <string name="sync_code_title">Compare the code</string>
+    <string name="sync_code_lead">“%1$s” wants to sync. Make sure the same code is shown on both devices.</string>
+    <string name="sync_code_yes">Codes match</string>
+    <string name="sync_code_no">They don’t match</string>
+    <string name="sync_code_waiting">Waiting for the other device…</string>
+    <string name="sync_done_title">Synced</string>
+    <plurals name="sync_done">
+        <item quantity="one">With “%2$s”: %1$d new line.</item>
+        <item quantity="other">With “%2$s”: %1$d new lines.</item>
+    </plurals>
+    <string name="sync_failed_title">Didn’t sync</string>
+    <string name="sync_err_rejected">The other device declined, or the codes didn’t match. Nothing was exchanged.</string>
+    <string name="sync_err_unreachable">The device can’t be reached. Both must be on the same Wi-Fi, and the other one must have the Sync screen open.</string>
+    <string name="sync_err_qr">This QR code isn’t from Stranitsa.</string>
+    <string name="sync_err_other">Connection failed: %1$s</string>
+    <string name="sync_not_found">“%1$s” isn’t visible. Open Sync → Show QR code on it and keep both devices on the same Wi-Fi.</string>
+    <string name="sync_camera_denied">Camera access is needed to scan the code. You can allow it in system settings — or use “Find nearby”.</string>
+    <string name="sync_scan_hint_frame">Point the camera at the QR code on the other device.</string>
+    <string name="sync_ok">Done</string>
+
+    <!-- Search -->
+    <string name="search">Search</string>
+    <string name="search_placeholder">Search the list</string>
+    <string name="search_hint">All pages. Case doesn’t matter.</string>
+    <string name="search_nothing">Nothing found.</string>
+    <string name="search_count">found %1$d</string>
+    <string name="search_show_closed">+ closed %1$d</string>
+    <string name="search_hide_closed">Active only</string>
+    <string name="search_where">p. %1$s · line %2$d</string>
+
+    <!-- Share -->
+    <string name="share_label">Add to Stranitsa</string>
+    <string name="share_title">To the end of the list</string>
+    <string name="share_split">Each line as a separate task</string>
+    <string name="share_split_hint">Tasks to add: %1$d</string>
+    <plurals name="share_added">
+        <item quantity="one">Added %1$d task · p. %2$d</item>
+        <item quantity="other">Added %1$d tasks · p. %2$d</item>
+    </plurals>
+
+    <!-- Settings -->
+    <string name="backup_toggle">System backup</string>
+    <string name="backup_hint">Off: the list stays only on this phone and in files you save. On: Android keeps a copy in your Google account and moves it to a new phone.</string>
+    <string name="section_appearance">Appearance</string>
+    <string name="theme_system">Same as system</string>
+    <string name="theme_light">Light</string>
+    <string name="theme_dark">Dark</string>
+    <string name="pure_black">AMOLED — pure black</string>
+    <string name="pure_black_hint">In dark theme. Saves battery on OLED screens</string>
+    <string name="dynamic_color">Wallpaper colours</string>
+    <string name="dynamic_color_hint">Material You: accent and tints follow your wallpaper</string>
+    <string name="themed_icon_hint">Themed icon: turn it on in system settings — Wallpaper &amp; style → Themed icons.</string>
+    <string name="section_page">Page</string>
+    <string name="lines_per_page">Lines per page</string>
+    <string name="lines_hint">Forster suggests 25–35 · this list</string>
+    <string name="hints_toggle">Hints on the page</string>
+    <string name="section_data">Data</string>
+    <string name="export">Save a backup to a file</string>
+    <string name="export_hint">Everything is stored only on this phone</string>
+    <string name="import_">Restore from a file</string>
+    <string name="import_confirm">Replace the current list with the file’s contents?</string>
+    <string name="replace">Replace</string>
+    <string name="export_ok">Backup saved.</string>
+    <string name="export_fail">Couldn’t save: %1$s</string>
+    <string name="import_read_fail">Couldn’t read the file.</string>
+    <string name="import_ok">List restored.</string>
+    <string name="import_bad">This file doesn’t look like a Stranitsa backup.</string>
+    <string name="backup_file_name" translatable="false">stranitsa-backup.json</string>
+
+    <!-- About -->
+    <string-array name="rules">
+        <item>One long list of everything you have to do. New items always go at the end.</item>
+        <item>Write down whatever comes to mind without judging it. The system does the judging.</item>
+        <item>Work page by page. First read the page quickly without doing anything.</item>
+        <item>Then go through it slowly, in order, until one task “stands out” — you feel it’s ready to be done. Don’t prioritise in your head.</item>
+        <item>Work on it for as long as you like. You don’t have to finish: little and often.</item>
+        <item>Finished — “Done” or swipe right. Not finished — “Not finished” or swipe left: the task goes to the end of the list. “×2” next to a task means it has already been moved to the end twice.</item>
+        <item>Keep circling the same page until a whole pass gives you nothing. Then move on.</item>
+        <item>If you come to a page and nothing stands out on the first pass, its remaining tasks are dismissed (except on the last page, where you’re still writing). Don’t bring them back straight away.</item>
+        <item>After the last page, go back to the first page that still has tasks.</item>
+        <item>Common sense first: if something has to be done right now, do it right now — find it with search or the arrows.</item>
+        <item>Don’t use the list for things with a fixed time of day — keep those in a calendar.</item>
+        <item>Keep a separate list for each place (Home, Work). The date marks the first task added each day — it shows how things move.</item>
+        <item>After a long break, read through all outstanding tasks first.</item>
+    </string-array>
+    <string name="about_credit">The method is Autofocus 1 by Mark Forster († 2025): markforster.squarespace.com/autofocus-system. This app is unofficial and not affiliated with the author.</string>
+    <string name="about_fonts">Fonts: Source Serif 4 (Adobe), IBM Plex Sans and Plex Mono (IBM) — SIL Open Font License 1.1.</string>
+    <string name="widget_description">Working page of the current list. “+” adds a task to the end.</string>
+    <string name="widget_add">Add a task</string>
+    <string name="widget_more">%1$d more on this page</string>
+    <string name="widget_empty_new">The list is empty. Tap “+”.</string>
+    <string name="widget_empty_page">Nothing left on this page. Open the app and move on.</string>
+    <string name="confirm_title">Nothing stood out?</string>
+    <plurals name="confirm_body">
+        <item quantity="one">Dismiss %1$d task on this page. It won’t come back on its own, but you can review it under “Dismissed”.</item>
+        <item quantity="other">Dismiss %1$d tasks on this page. They won’t come back on their own, but you can review them under “Dismissed”.</item>
+    </plurals>
+    <plurals name="confirm_dismiss_n">
+        <item quantity="one">Dismiss %1$d</item>
+        <item quantity="other">Dismiss %1$d</item>
+    </plurals>
+    <string name="fewer_lines">Fewer lines</string>
+    <string name="more_lines">More lines</string>
+    <string name="widget_header">of %1$s · %2$s</string>
+    <string name="widget_small_label">%1$s</string>
+    <string name="widget_small_meta">of %1$s · active %2$d</string>
+</resources>

@@ -1,0 +1,6 @@
+[bindings.kotlin]
+package_name = "app.stranitsa.core"
+cdylib_name = "stranitsa_core"
+
+[bindings.swift]
+module_name = "StranitsaCore"
