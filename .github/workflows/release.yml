@@ -10,7 +10,7 @@
 name: release
 on:
   push:
-    tags: ["v*"]
+    tags: ["v*", "[0-9]*"]
 permissions:
   contents: write
 jobs:
@@ -51,7 +51,7 @@ jobs:
         id: notes
         shell: bash
         run: |
-          F=".github/release-notes/${GITHUB_REF_NAME}.md"
+          F=".github/release-notes/v${GITHUB_REF_NAME#v}.md"
           if [ -f "$F" ]; then echo "path=$F" >> "$GITHUB_OUTPUT"; echo "generate=false" >> "$GITHUB_OUTPUT"
           else echo "path=" >> "$GITHUB_OUTPUT"; echo "generate=true" >> "$GITHUB_OUTPUT"; fi
       - uses: softprops/action-gh-release@v2
@@ -83,7 +83,7 @@ jobs:
         id: notes
         shell: bash
         run: |
-          F=".github/release-notes/${GITHUB_REF_NAME}.md"
+          F=".github/release-notes/v${GITHUB_REF_NAME#v}.md"
           if [ -f "$F" ]; then echo "path=$F" >> "$GITHUB_OUTPUT"; echo "generate=false" >> "$GITHUB_OUTPUT"
           else echo "path=" >> "$GITHUB_OUTPUT"; echo "generate=true" >> "$GITHUB_OUTPUT"; fi
       - uses: softprops/action-gh-release@v2
