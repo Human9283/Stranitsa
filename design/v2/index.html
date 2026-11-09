@@ -1,0 +1,13 @@
+<!doctype html><html lang="ru"><head><meta charset="utf-8"><title>Страница — макеты 2.0</title>
+<link rel="stylesheet" href="fonts.css"></head><body><div id="root"></div>
+<script src="screens.js"></script><script src="rules.js"></script><script src="build.js"></script>
+<script>
+const s = location.hash.slice(1);
+const root = document.getElementById('root');
+if (s==='rules') root.innerHTML = rulesHTML;
+else if (s==='widgets') {
+  const themes=[['t-light','Светлая'],['t-dark','Тёмная'],['t-amoled','AMOLED'],['t-monetL','Monet, светлая'],['t-monetD','Monet, тёмная']];
+  root.innerHTML = `<div class="sheet">`+themes.map(([t,n])=>wrap(n,'', wallpaper(t, widget(t,'4x2')+`<div style="align-self:flex-start;margin-left:0">${widget(t,'2x2')}</div>`+widget(t,'4x4'), 760))).join('')+`</div>`;
+} else root.innerHTML = `<div class="sheet">${secs[s].join('')}</div>`;
+document.fonts.ready.then(()=>document.body.setAttribute('data-ready','1'));
+</script></body></html>

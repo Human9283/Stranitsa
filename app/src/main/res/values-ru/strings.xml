@@ -1,0 +1,252 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">Страница</string>
+
+    <!-- Шапка и меню -->
+    <string name="menu">Меню</string>
+    <string name="menu_dismissed">Отброшенные</string>
+    <string name="menu_settings">Настройки</string>
+    <string name="menu_howto">Как работает метод</string>
+    <string name="page_of">из %1$s</string>
+    <string name="prev_page">Предыдущая страница</string>
+    <string name="next_page">Следующая страница</string>
+    <string name="active_count">активных %1$d</string>
+    <string name="done_today">сделано сегодня %1$d</string>
+    <string name="review_count">пересмотр %1$d →</string>
+
+    <!-- Подсказки под номером страницы -->
+    <string name="hint_viewing">Вы смотрите страницу %1$s. Рабочая — %2$s.</string>
+    <string name="hint_closed">На этой странице всё закрыто.</string>
+    <string name="hint_first_pass">Пробегите страницу, затем медленно — пока что-то не выделится.</string>
+    <string name="hint_circle">Кружите по странице. Пустой проход — дальше.</string>
+
+    <!-- Строка сообщения над вводом -->
+    <string name="bar_added">Записано в конец · стр. %1$s</string>
+    <string name="bar_done">Сделано · %1$s</string>
+    <string name="bar_reentered">В конец списка · %1$s</string>
+    <string name="bar_deleted">Удалено · %1$s</string>
+    <plurals name="bar_dismissed">
+        <item quantity="one">Отброшено: %d задача</item>
+        <item quantity="few">Отброшено: %d задачи</item>
+        <item quantity="many">Отброшено: %d задач</item>
+        <item quantity="other">Отброшено: %d задачи</item>
+    </plurals>
+    <string name="undo">Отменить</string>
+
+    <!-- Ввод -->
+    <string name="new_task">Новая задача</string>
+    <string name="first_task">Первая задача</string>
+    <string name="add">Записать</string>
+
+    <!-- Строка «Дальше» -->
+    <string name="next_back">К странице %1$s</string>
+    <string name="next_all_closed">Все задачи закрыты</string>
+    <string name="next_no_other">Других страниц нет</string>
+    <string name="next_page_plain">Следующая страница</string>
+    <string name="next_nothing">Ничего не выделилось</string>
+    <string name="next_passed">Пройдена, дальше</string>
+    <string name="next_target">стр. %1$s →</string>
+
+    <!-- Состояния строк -->
+    <string name="meta_reentered">→ в конец</string>
+    <string name="meta_dismissed">отброшено</string>
+    <string name="meta_deleted">удалено</string>
+    <string name="state_new">не начата</string>
+    <string name="state_in_progress">в работе, переносилась: %1$d</string>
+    <string name="state_done">сделано</string>
+    <string name="state_reentered">перенесена в конец</string>
+    <string name="state_dismissed">отброшена</string>
+    <string name="state_deleted">удалена</string>
+
+    <!-- Действия со строкой -->
+    <string name="act_show">Показать действия</string>
+    <string name="act_done">Сделано</string>
+    <string name="act_not_finished">Не закончил</string>
+    <string name="act_not_finished_long">Поработал, не закончил</string>
+    <string name="act_edit">Изменить</string>
+    <string name="act_save">Сохранить</string>
+    <string name="act_cancel">Отмена</string>
+    <string name="act_delete">Удалить</string>
+    <string name="swipe_to_end">В конец</string>
+
+    <!-- Подтверждение отбрасывания -->
+    <string name="confirm_keep">Не отбрасывать</string>
+
+    <!-- Первый запуск -->
+    <string name="first_title">Запишите всё, что приходит в голову.</string>
+    <string name="first_lead">По одной задаче в строку. Не оценивайте и не сортируйте — система сделает это сама.</string>
+    <string-array name="first_steps">
+        <item>Прочитайте страницу быстро, ничего не делая.</item>
+        <item>Идите медленно, пока что-то не выделится. Работайте над этим сколько хочется.</item>
+        <item>Не закончили — задача уйдёт в конец списка.</item>
+    </string-array>
+    <string name="first_note">Дела к точному времени — встречи, готовку, закрытие магазина — держите в календаре, а не здесь.</string>
+
+    <!-- Отброшенные -->
+    <string name="back">Назад</string>
+    <string name="dismissed_lead">Система отсеяла эти задачи. Не возвращайте их сразу: подумайте, нужны ли они вообще и пришло ли для них время. Возвращая, лучше переформулировать или оставить только первый шаг.</string>
+    <string name="dismissed_empty">Пересматривать нечего.</string>
+    <string name="dismissed_on">отброшено %1$s</string>
+    <string name="revive">Вернуть</string>
+    <string name="revive_to_end">Вернуть в конец</string>
+    <string name="forget">Забыть</string>
+
+    <!-- Списки -->
+    <string name="list_default">Мой список</string>
+    <string name="menu_lists">Списки</string>
+    <string name="lists_lead">Форстер советует отдельный список для каждого места — например, «Дом» и «Работа». У каждого списка свои страницы.</string>
+    <string name="lists_new">Новый список, например «Дом» или «Работа»</string>
+    <string name="list_meta">активных %1$d · стр. %2$s из %3$s</string>
+    <string name="list_delete_confirm">Удалить «%1$s» со всеми задачами?</string>
+    <string name="list_create">Создать</string>
+    <string name="share_to_list">Список:</string>
+
+    <!-- После перерыва -->
+    <plurals name="break_banner">
+        <item quantity="one">Вы не открывали список %d день. Форстер советует сначала прочитать все невыполненные задачи.</item>
+        <item quantity="few">Вы не открывали список %d дня. Форстер советует сначала прочитать все невыполненные задачи.</item>
+        <item quantity="many">Вы не открывали список %d дней. Форстер советует сначала прочитать все невыполненные задачи.</item>
+        <item quantity="other">Вы не открывали список %d дня. Форстер советует сначала прочитать все невыполненные задачи.</item>
+    </plurals>
+    <string name="break_read">Прочитать всё</string>
+    <string name="break_later">Не сейчас</string>
+    <string name="menu_review">Прочитать все задачи</string>
+    <string name="review_title">Все невыполненные</string>
+    <string name="review_lead">Просто прочитайте — делать ничего не нужно. Так голова получит общую картину. Нажмите на задачу, чтобы открыть её страницу.</string>
+    <string name="review_page">Страница %1$s</string>
+    <string name="review_done">Прочитал</string>
+
+    <!-- Синхронизация -->
+    <string name="menu_sync">Синхронизация</string>
+    <string name="sync_lead">Устройства в одной сети Wi-Fi обмениваются списками напрямую, без облака. Всё зашифровано.</string>
+    <string name="sync_show_qr">Показать QR-код</string>
+    <string name="sync_show_qr_hint">Другое устройство его сканирует</string>
+    <string name="sync_scan">Сканировать QR-код</string>
+    <string name="sync_scan_hint">На компьютере: stranitsa host</string>
+    <string name="sync_nearby">Найти рядом</string>
+    <string name="sync_nearby_hint">Без QR: сверите 6-значный код</string>
+    <string name="sync_known">Знакомые устройства</string>
+    <string name="sync_never">ещё не синхронизировались</string>
+    <string name="sync_last">последняя синхронизация %1$s</string>
+    <string name="sync_now">Синхронизировать</string>
+    <string name="sync_forget">Забыть</string>
+    <string name="sync_visible">Устройство видно как «%1$s». Держите экран открытым, пока другое устройство не подключится.</string>
+    <string name="sync_waiting">Ждём устройство…</string>
+    <string name="sync_searching">Ищем устройства… На другом откройте «Синхронизация → Показать QR-код».</string>
+    <string name="sync_nobody">Пока никого. Оба устройства должны быть в одной сети Wi-Fi.</string>
+    <string name="sync_known_mark">знакомое</string>
+    <string name="sync_connecting">Подключаемся к «%1$s»…</string>
+    <string name="sync_code_title">Сверьте код</string>
+    <string name="sync_code_lead">«%1$s» хочет синхронизироваться. Убедитесь, что на обоих устройствах один и тот же код.</string>
+    <string name="sync_code_yes">Коды совпадают</string>
+    <string name="sync_code_no">Не совпадают</string>
+    <string name="sync_code_waiting">Ждём другое устройство…</string>
+    <string name="sync_done_title">Синхронизировано</string>
+    <plurals name="sync_done">
+        <item quantity="one">С «%2$s»: %1$d новая строка.</item>
+        <item quantity="few">С «%2$s»: %1$d новые строки.</item>
+        <item quantity="many">С «%2$s»: %1$d новых строк.</item>
+        <item quantity="other">С «%2$s»: %1$d новой строки.</item>
+    </plurals>
+    <string name="sync_failed_title">Не получилось</string>
+    <string name="sync_err_rejected">Другое устройство отказалось или коды не совпали. Ничего не передано.</string>
+    <string name="sync_err_unreachable">Устройство недоступно. Оба должны быть в одной сети Wi-Fi, а на другом — открыт экран синхронизации.</string>
+    <string name="sync_err_qr">Это не QR-код Страницы.</string>
+    <string name="sync_err_other">Не удалось соединиться: %1$s</string>
+    <string name="sync_not_found">«%1$s» не видно. Откройте на нём «Синхронизация → Показать QR-код» — и оба устройства в одну сеть Wi-Fi.</string>
+    <string name="sync_camera_denied">Чтобы сканировать код, нужен доступ к камере. Его можно разрешить в настройках системы — или воспользоваться «Найти рядом».</string>
+    <string name="sync_scan_hint_frame">Наведите камеру на QR-код на другом устройстве.</string>
+    <string name="sync_ok">Готово</string>
+
+    <!-- Поиск -->
+    <string name="search">Поиск</string>
+    <string name="search_placeholder">Поиск по списку</string>
+    <string name="search_hint">По всем страницам. Регистр и «ё» не важны.</string>
+    <string name="search_nothing">Ничего не найдено.</string>
+    <string name="search_count">найдено %1$d</string>
+    <string name="search_show_closed">+ закрытые %1$d</string>
+    <string name="search_hide_closed">Только активные</string>
+    <string name="search_where">стр. %1$s · строка %2$d</string>
+
+    <!-- Поделиться -->
+    <string name="share_label">В Страницу</string>
+    <string name="share_title">В конец списка</string>
+    <string name="share_split">Каждая строка — отдельная задача</string>
+    <string name="share_split_hint">Будет задач: %1$d</string>
+    <plurals name="share_added">
+        <item quantity="one">Записана %1$d задача · стр. %2$d</item>
+        <item quantity="few">Записано %1$d задачи · стр. %2$d</item>
+        <item quantity="many">Записано %1$d задач · стр. %2$d</item>
+        <item quantity="other">Записано %1$d задачи · стр. %2$d</item>
+    </plurals>
+
+    <!-- Настройки -->
+    <string name="backup_toggle">Системная резервная копия</string>
+    <string name="backup_hint">Выкл.: список хранится только на этом телефоне и в файлах, которые вы сохраните сами. Вкл.: Android хранит копию в вашем Google-аккаунте и переносит её на новый телефон.</string>
+    <string name="section_appearance">Оформление</string>
+    <string name="theme_system">Как в системе</string>
+    <string name="theme_light">Светлая</string>
+    <string name="theme_dark">Тёмная</string>
+    <string name="pure_black">AMOLED — чистый чёрный</string>
+    <string name="pure_black_hint">В тёмной теме. Экономит заряд на OLED-экранах</string>
+    <string name="dynamic_color">Цвета обоев</string>
+    <string name="dynamic_color_hint">Material You: акцент и оттенки берутся из обоев</string>
+    <string name="themed_icon_hint">Тематический значок включается в системе: Обои и стиль → Тематические значки.</string>
+    <string name="section_page">Страница</string>
+    <string name="lines_per_page">Строк на странице</string>
+    <string name="lines_hint">Форстер советует 25–35 · для этого списка</string>
+    <string name="hints_toggle">Подсказки на странице</string>
+    <string name="section_data">Данные</string>
+    <string name="export">Сохранить копию в файл</string>
+    <string name="export_hint">Всё хранится только на этом телефоне</string>
+    <string name="import_">Восстановить из файла</string>
+    <string name="import_confirm">Заменить текущий список содержимым файла?</string>
+    <string name="replace">Заменить</string>
+    <string name="export_ok">Копия сохранена.</string>
+    <string name="export_fail">Не удалось сохранить: %1$s</string>
+    <string name="import_read_fail">Не удалось прочитать файл.</string>
+    <string name="import_ok">Список восстановлен.</string>
+    <string name="import_bad">Файл не похож на копию Страницы.</string>
+
+    <!-- О системе -->
+    <string-array name="rules">
+        <item>Один длинный список всего, что нужно сделать. Новое — всегда в конец.</item>
+        <item>Записывайте всё, что приходит в голову, не оценивая. Оценивать будет система.</item>
+        <item>Работайте постранично. Сначала быстро прочитайте страницу, ничего не делая.</item>
+        <item>Затем медленно идите по порядку, пока одна задача не «выделится» — появится ощущение, что она готова к работе. Не расставляйте приоритеты в уме.</item>
+        <item>Работайте над ней сколько хочется. Закончить не обязательно: понемногу и часто.</item>
+        <item>Сделали — «Сделано» или свайп вправо. Не закончили — «Не закончил» или свайп влево: задача уйдёт в конец списка. «×2» рядом с задачей значит, что её уже дважды переносили в конец.</item>
+        <item>Кружите по той же странице, пока целый проход ничего не даст. Тогда — дальше.</item>
+        <item>Если вы пришли на страницу и с первого прохода ничего не выделилось, её оставшиеся задачи отбрасываются (кроме последней страницы, где вы ещё пишете). Не возвращайте их сразу.</item>
+        <item>После последней страницы — снова первая, где остались задачи.</item>
+        <item>Здравый смысл прежде всего: если что-то нужно сделать прямо сейчас — делайте сейчас, найдите задачу поиском или стрелками.</item>
+        <item>Не держите в списке дела к точному времени дня — для них календарь.</item>
+        <item>Отдельный список для каждого места («Дом», «Работа»). Дата отмечает первую задачу каждого дня — так видно движение.</item>
+        <item>После долгого перерыва сначала прочитайте все невыполненные задачи.</item>
+    </string-array>
+    <string name="about_credit">Метод — Autofocus 1 Марка Форстера (Mark Forster, † 2025): markforster.squarespace.com/autofocus-system. Приложение неофициальное и с автором метода не связано.</string>
+    <string name="about_fonts">Шрифты: Source Serif 4 (Adobe), IBM Plex Sans и Plex Mono (IBM) — SIL Open Font License 1.1.</string>
+    <string name="widget_description">Рабочая страница текущего списка. «+» — записать задачу в конец.</string>
+    <string name="widget_add">Записать задачу</string>
+    <string name="widget_more">ещё %1$d на этой странице</string>
+    <string name="widget_empty_new">Список пуст. Нажмите «+».</string>
+    <string name="widget_empty_page">На этой странице ничего не осталось. Откройте приложение и идите дальше.</string>
+    <string name="confirm_title">Ничего не выделилось?</string>
+    <plurals name="confirm_body">
+        <item quantity="one">Отбросить %1$d задачу этой страницы. Сама она не вернётся, но её можно просмотреть в разделе «Отброшенные».</item>
+        <item quantity="few">Отбросить %1$d задачи этой страницы. Сами они не вернутся, но их можно просмотреть в разделе «Отброшенные».</item>
+        <item quantity="many">Отбросить %1$d задач этой страницы. Сами они не вернутся, но их можно просмотреть в разделе «Отброшенные».</item>
+        <item quantity="other">Отбросить %1$d задачи этой страницы. Сами они не вернутся, но их можно просмотреть в разделе «Отброшенные».</item>
+    </plurals>
+    <plurals name="confirm_dismiss_n">
+        <item quantity="one">Отбросить %1$d</item>
+        <item quantity="few">Отбросить %1$d</item>
+        <item quantity="many">Отбросить %1$d</item>
+        <item quantity="other">Отбросить %1$d</item>
+    </plurals>
+    <string name="fewer_lines">Меньше строк</string>
+    <string name="more_lines">Больше строк</string>
+    <string name="widget_header">из %1$s · %2$s</string>
+    <string name="widget_small_label">%1$s</string>
+    <string name="widget_small_meta">из %1$s · активных %2$d</string>
+</resources>

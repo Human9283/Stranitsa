@@ -1,0 +1,31 @@
+# Сборка ПК-версии на трёх системах: установщик собирается только на своей ОС.
+name: desktop
+on:
+  workflow_dispatch:
+  push:
+    tags: ["desktop-v*"]
+jobs:
+  build:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: dtolnay/rust-toolchain@stable
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y fakeroot
+      - name: Tests
+        working-directory: desktop
+        run: ./gradlew test
+        shell: bash
+      - name: Installer
+        working-directory: desktop
+        run: ./gradlew packageDistributionForCurrentOS
+        shell: bash
+      - uses: actions/upload-artifact@v4
+        with:
+          name: stranitsa-${{ runner.os }}
+          path: desktop/build/compose/binaries/main/*/*

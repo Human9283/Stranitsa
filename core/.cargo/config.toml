@@ -1,0 +1,6 @@
+# Пути сборочной машины не попадают в панические сообщения готовых библиотек.
+[build]
+rustflags = [
+  "--remap-path-prefix=/root/.cargo=/cargo",
+  "--remap-path-prefix=/home/user/af1-android=/src",
+]

@@ -1,0 +1,308 @@
+<?xml version="1.0" encoding="utf-8"?>
+<!-- Виджет 4×2 и больше: номер страницы, список и «+». -->
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:id="@+id/root"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <ImageView
+        android:id="@+id/bg"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:scaleType="fitXY"
+        android:importantForAccessibility="no"
+        android:src="@drawable/widget_bg" />
+
+    <LinearLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:orientation="vertical"
+        android:paddingStart="16dp"
+        android:paddingEnd="8dp"
+        android:paddingTop="8dp"
+        android:paddingBottom="10dp">
+
+        <LinearLayout
+            android:id="@+id/header"
+            android:layout_width="match_parent"
+            android:layout_height="48dp"
+            android:orientation="horizontal"
+            android:gravity="center_vertical">
+            <TextView
+                android:id="@+id/pageNo"
+                android:layout_width="wrap_content"
+                android:layout_height="wrap_content"
+                android:fontFamily="@font/serif_regular"
+                android:fontFeatureSettings="tnum"
+                android:textSize="30sp"
+                android:includeFontPadding="false"
+                android:maxLines="1" />
+            <TextView
+                android:id="@+id/pageOf"
+                android:layout_width="0dp"
+                android:layout_weight="1"
+                android:layout_height="wrap_content"
+                android:layout_marginStart="8dp"
+                android:fontFamily="@font/plex_sans_regular"
+                android:textSize="14sp"
+                android:maxLines="1"
+                android:ellipsize="end" />
+            <FrameLayout
+                android:id="@+id/add"
+                android:layout_width="48dp"
+                android:layout_height="48dp"
+                android:contentDescription="@string/widget_add">
+                <ImageView
+                    android:id="@+id/addBg"
+                    android:layout_width="40dp"
+                    android:layout_height="40dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/widget_btn" />
+                <ImageView
+                    android:id="@+id/addIcon"
+                    android:layout_width="24dp"
+                    android:layout_height="24dp"
+                    android:layout_gravity="center"
+                    android:importantForAccessibility="no"
+                    android:src="@drawable/ic_widget_plus" />
+            </FrameLayout>
+        </LinearLayout>
+
+        <LinearLayout
+            android:id="@+id/body"
+            android:layout_width="match_parent"
+            android:layout_height="0dp"
+            android:layout_weight="1"
+            android:orientation="vertical"
+            android:paddingTop="4dp"
+            android:paddingEnd="8dp">
+            <LinearLayout
+                android:id="@+id/row1"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView
+                    android:id="@+id/num1"
+                    android:layout_width="30dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plex_sans_regular"
+                    android:fontFeatureSettings="tnum"
+                    android:textSize="12sp"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/txt1"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/serif_regular"
+                    android:textSize="16sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row2"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView
+                    android:id="@+id/num2"
+                    android:layout_width="30dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plex_sans_regular"
+                    android:fontFeatureSettings="tnum"
+                    android:textSize="12sp"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/txt2"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/serif_regular"
+                    android:textSize="16sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row3"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView
+                    android:id="@+id/num3"
+                    android:layout_width="30dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plex_sans_regular"
+                    android:fontFeatureSettings="tnum"
+                    android:textSize="12sp"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/txt3"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/serif_regular"
+                    android:textSize="16sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row4"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView
+                    android:id="@+id/num4"
+                    android:layout_width="30dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plex_sans_regular"
+                    android:fontFeatureSettings="tnum"
+                    android:textSize="12sp"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/txt4"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/serif_regular"
+                    android:textSize="16sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row5"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView
+                    android:id="@+id/num5"
+                    android:layout_width="30dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plex_sans_regular"
+                    android:fontFeatureSettings="tnum"
+                    android:textSize="12sp"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/txt5"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/serif_regular"
+                    android:textSize="16sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row6"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView
+                    android:id="@+id/num6"
+                    android:layout_width="30dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plex_sans_regular"
+                    android:fontFeatureSettings="tnum"
+                    android:textSize="12sp"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/txt6"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/serif_regular"
+                    android:textSize="16sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row7"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView
+                    android:id="@+id/num7"
+                    android:layout_width="30dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plex_sans_regular"
+                    android:fontFeatureSettings="tnum"
+                    android:textSize="12sp"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/txt7"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/serif_regular"
+                    android:textSize="16sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+            <LinearLayout
+                android:id="@+id/row8"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:orientation="horizontal"
+                android:gravity="center_vertical"
+                android:paddingTop="4dp"
+                android:paddingBottom="4dp">
+                <TextView
+                    android:id="@+id/num8"
+                    android:layout_width="30dp"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/plex_sans_regular"
+                    android:fontFeatureSettings="tnum"
+                    android:textSize="12sp"
+                    android:maxLines="1" />
+                <TextView
+                    android:id="@+id/txt8"
+                    android:layout_width="0dp"
+                    android:layout_weight="1"
+                    android:layout_height="wrap_content"
+                    android:fontFamily="@font/serif_regular"
+                    android:textSize="16sp"
+                    android:maxLines="1"
+                    android:ellipsize="end" />
+            </LinearLayout>
+            <TextView
+                android:id="@+id/more"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingStart="30dp"
+                android:paddingTop="4dp"
+                android:fontFamily="@font/plex_sans_regular"
+                android:textSize="13sp"
+                android:maxLines="1" />
+            <TextView
+                android:id="@+id/empty"
+                android:layout_width="match_parent"
+                android:layout_height="wrap_content"
+                android:paddingTop="6dp"
+                android:fontFamily="@font/plex_sans_regular"
+                android:textSize="15sp"
+                android:lineSpacingExtra="3sp"
+                android:visibility="gone" />
+        </LinearLayout>
+    </LinearLayout>
+</FrameLayout>
