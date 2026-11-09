@@ -28,14 +28,22 @@ jobs:
           KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
           PROPS: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}
         run: |
-          mkdir -p keystore
-          echo "$KS" | base64 -d > keystore/release.jks
-          printf '%s\n' "$PROPS" > keystore/keystore.properties
+          if [ -n "$KS" ] && [ -n "$PROPS" ]; then
+            mkdir -p keystore
+            echo "$KS" | base64 -d > keystore/release.jks
+            printf '%s\n' "$PROPS" > keystore/keystore.properties
+          else
+            echo "::warning::Секреты ANDROID_KEYSTORE_* не заданы — APK будет без подписи и не установится на телефон."
+          fi
       - name: Build
         run: |
-          V="${GITHUB_REF_NAME#v}"
+          V="${GITHUB_REF_NAME#v}"; V="${V%%-*}"   # 1.2.3-beta → 1.2.3: версии — только числа
           ./gradlew assembleRelease -PappVersion="$V" -PupdateRepo="$GITHUB_REPOSITORY"
-          cp app/build/outputs/apk/release/app-release.apk "Stranitsa-$V.apk"
+          APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
+          case "$APK" in
+            *unsigned*) cp "$APK" "Stranitsa-$V-unsigned.apk" ;;
+            *)          cp "$APK" "Stranitsa-$V.apk" ;;
+          esac
       - uses: softprops/action-gh-release@v2
         with:
           files: Stranitsa-*.apk
@@ -55,7 +63,9 @@ jobs:
       - name: Build
         working-directory: desktop
         shell: bash
-        run: ./gradlew packageDistributionForCurrentOS -PappVersion="${GITHUB_REF_NAME#v}" -PupdateRepo="$GITHUB_REPOSITORY"
+        run: |
+          V="${GITHUB_REF_NAME#v}"; V="${V%%-*}"   # установщики принимают только числовую версию
+          ./gradlew packageDistributionForCurrentOS -PappVersion="$V" -PupdateRepo="$GITHUB_REPOSITORY"
       - uses: softprops/action-gh-release@v2
         with:
           files: |
