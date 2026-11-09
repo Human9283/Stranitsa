@@ -11,17 +11,30 @@ name: release
 on:
   push:
     tags: ["v*", "[0-9]*"]
+  # Пересобрать выпуск вручную: Actions → release → Run workflow → тег (например v1.0.1).
+  workflow_dispatch:
+    inputs:
+      tag:
+        description: "Тег выпуска, который нужно (пере)собрать"
+        required: true
 permissions:
   contents: write
+env:
+  TAG: ${{ inputs.tag || github.ref_name }}
 jobs:
   android:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
+        with: { ref: "${{ env.TAG }}" }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: "21" }
-      - uses: android-actions/setup-android@v3
-      - run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+      - name: Android SDK
+        run: |
+          # SDK уже есть на образе; action android-actions/setup-android на нём падает.
+          SDKM=$(ls "$ANDROID_HOME"/cmdline-tools/*/bin/sdkmanager | head -1)
+          yes | "$SDKM" --licenses > /dev/null || true
+          "$SDKM" "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
       - uses: dtolnay/rust-toolchain@stable
         with:
           targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
@@ -40,7 +53,7 @@ jobs:
           fi
       - name: Build
         run: |
-          V="${GITHUB_REF_NAME#v}"; V="${V%%-*}"   # 1.2.3-beta → 1.2.3: версии — только числа
+          V="${TAG#v}"; V="${V%%-*}"   # 1.2.3-beta → 1.2.3: версии — только числа
           ./gradlew assembleRelease -PappVersion="$V" -PupdateRepo="$GITHUB_REPOSITORY"
           APK=$(ls app/build/outputs/apk/release/*.apk | head -1)
           case "$APK" in
@@ -51,12 +64,13 @@ jobs:
         id: notes
         shell: bash
         run: |
-          F=".github/release-notes/v${GITHUB_REF_NAME#v}.md"
+          F=".github/release-notes/v${TAG#v}.md"
           if [ -f "$F" ]; then echo "path=$F" >> "$GITHUB_OUTPUT"; echo "generate=false" >> "$GITHUB_OUTPUT"
           else echo "path=" >> "$GITHUB_OUTPUT"; echo "generate=true" >> "$GITHUB_OUTPUT"; fi
       - uses: softprops/action-gh-release@v2
         with:
-          name: Страница ${{ github.ref_name }}
+          tag_name: ${{ env.TAG }}
+          name: Страница ${{ env.TAG }}
           body_path: ${{ steps.notes.outputs.path }}
           generate_release_notes: ${{ steps.notes.outputs.generate }}
           files: Stranitsa-*.apk
@@ -68,6 +82,7 @@ jobs:
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@v4
+        with: { ref: "${{ env.TAG }}" }
       - uses: actions/setup-java@v4
         with: { distribution: temurin, java-version: "21" }
       - uses: dtolnay/rust-toolchain@stable
@@ -77,18 +92,19 @@ jobs:
         working-directory: desktop
         shell: bash
         run: |
-          V="${GITHUB_REF_NAME#v}"; V="${V%%-*}"   # установщики принимают только числовую версию
+          V="${TAG#v}"; V="${V%%-*}"   # установщики принимают только числовую версию
           ./gradlew packageDistributionForCurrentOS -PappVersion="$V" -PupdateRepo="$GITHUB_REPOSITORY"
       - name: Release notes
         id: notes
         shell: bash
         run: |
-          F=".github/release-notes/v${GITHUB_REF_NAME#v}.md"
+          F=".github/release-notes/v${TAG#v}.md"
           if [ -f "$F" ]; then echo "path=$F" >> "$GITHUB_OUTPUT"; echo "generate=false" >> "$GITHUB_OUTPUT"
           else echo "path=" >> "$GITHUB_OUTPUT"; echo "generate=true" >> "$GITHUB_OUTPUT"; fi
       - uses: softprops/action-gh-release@v2
         with:
-          name: Страница ${{ github.ref_name }}
+          tag_name: ${{ env.TAG }}
+          name: Страница ${{ env.TAG }}
           body_path: ${{ steps.notes.outputs.path }}
           generate_release_notes: ${{ steps.notes.outputs.generate }}
           files: |
