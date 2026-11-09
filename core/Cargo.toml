@@ -3,7 +3,7 @@ name = "stranitsa-core"
 version = "0.1.0"
 edition = "2021"
 description = "Stranitsa core (method: Autofocus 1 by Mark Forster): list rules, storage, migration and merge — shared by Android, iOS and desktop."
-license = "MIT"
+license = "Apache-2.0"
 publish = false
 
 [lib]
