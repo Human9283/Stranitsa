@@ -1,6 +1,9 @@
 # Выпуск: git tag v1.2.3 && git push --tags → APK и установщики для Windows, macOS, Linux
 # в GitHub Releases. Приложения сами находят новый выпуск (если репозиторий публичный).
 #
+# Название выпуска — «Страница <тег>», описание — из .github/release-notes/<тег>.md
+# (нет файла — GitHub соберёт список изменений сам).
+#
 # Секреты репозитория для подписи APK (Settings → Secrets and variables → Actions):
 #   ANDROID_KEYSTORE_BASE64  — base64 от keystore/release.jks
 #   ANDROID_KEYSTORE_PROPERTIES — содержимое keystore/keystore.properties
@@ -44,8 +47,18 @@ jobs:
             *unsigned*) cp "$APK" "Stranitsa-$V-unsigned.apk" ;;
             *)          cp "$APK" "Stranitsa-$V.apk" ;;
           esac
+      - name: Release notes
+        id: notes
+        shell: bash
+        run: |
+          F=".github/release-notes/${GITHUB_REF_NAME}.md"
+          if [ -f "$F" ]; then echo "path=$F" >> "$GITHUB_OUTPUT"; echo "generate=false" >> "$GITHUB_OUTPUT"
+          else echo "path=" >> "$GITHUB_OUTPUT"; echo "generate=true" >> "$GITHUB_OUTPUT"; fi
       - uses: softprops/action-gh-release@v2
         with:
+          name: Страница ${{ github.ref_name }}
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.generate }}
           files: Stranitsa-*.apk
 
   desktop:
@@ -66,8 +79,18 @@ jobs:
         run: |
           V="${GITHUB_REF_NAME#v}"; V="${V%%-*}"   # установщики принимают только числовую версию
           ./gradlew packageDistributionForCurrentOS -PappVersion="$V" -PupdateRepo="$GITHUB_REPOSITORY"
+      - name: Release notes
+        id: notes
+        shell: bash
+        run: |
+          F=".github/release-notes/${GITHUB_REF_NAME}.md"
+          if [ -f "$F" ]; then echo "path=$F" >> "$GITHUB_OUTPUT"; echo "generate=false" >> "$GITHUB_OUTPUT"
+          else echo "path=" >> "$GITHUB_OUTPUT"; echo "generate=true" >> "$GITHUB_OUTPUT"; fi
       - uses: softprops/action-gh-release@v2
         with:
+          name: Страница ${{ github.ref_name }}
+          body_path: ${{ steps.notes.outputs.path }}
+          generate_release_notes: ${{ steps.notes.outputs.generate }}
           files: |
             desktop/build/compose/binaries/main/*/*.deb
             desktop/build/compose/binaries/main/*/*.rpm
