@@ -282,4 +282,19 @@
         <item quantity="many">Убрано %1$d строк</item>
         <item quantity="other">Убрано %1$d строки</item>
     </plurals>
+    <!-- Отчёт об ошибке -->
+    <string name="section_about">О программе</string>
+    <string name="app_version">Версия %1$s</string>
+    <string name="report_title">Сообщить об ошибке</string>
+    <string name="report_row_hint">Вы увидите отчёт целиком перед отправкой. Ваших задач в нём нет.</string>
+    <string name="report_lead">В отчёте версия, система, настройки, число списков и строк и технический журнал. Ваших задач, названий списков и имён устройств в нём нет. Прочитайте его перед отправкой.</string>
+    <string name="report_open">Открыть на GitHub</string>
+    <string name="report_copy">Копировать</string>
+    <string name="report_share">Поделиться</string>
+    <string name="report_copied">Отчёт скопирован.</string>
+    <string name="report_pasted_hint">Отчёт слишком длинный для ссылки, поэтому он скопирован: вставьте его в текст обращения.</string>
+    <string name="report_github_hint">Для отправки на GitHub нужен аккаунт GitHub. Без него — «Поделиться».</string>
+    <string name="report_intro">**Что случилось?**\n\n(Опишите, что вы делали и что пошло не так.)</string>
+    <string name="crash_banner">В прошлый раз приложение закрылось с ошибкой. Отправить отчёт?</string>
+    <string name="crash_view">Посмотреть</string>
 </resources>

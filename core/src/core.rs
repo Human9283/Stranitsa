@@ -55,6 +55,8 @@ struct Inner {
     /// Ключ устройства и знакомые устройства — отдельный файл `stranitsa-sync.json` рядом с данными.
     identity: Identity,
     identity_path: Option<PathBuf>,
+    /// Файл данных — для размера в отчёте об ошибке.
+    data_path: Option<PathBuf>,
 }
 
 fn load_identity(path: &Option<PathBuf>) -> Identity {
@@ -63,6 +65,7 @@ fn load_identity(path: &Option<PathBuf>) -> Identity {
             if let Ok(id) = serde_json::from_str::<Identity>(&text) {
                 return id;
             }
+            crate::diag::event("sync keys: file damaged, new device key generated");
         }
         let id = Identity::generate();
         let _ = write_identity(p, &id);
@@ -74,7 +77,7 @@ fn load_identity(path: &Option<PathBuf>) -> Identity {
 fn write_identity(p: &PathBuf, id: &Identity) -> std::io::Result<()> {
     let tmp = p.with_extension("json.tmp");
     std::fs::write(&tmp, serde_json::to_vec(id).expect("identity"))?;
-    std::fs::rename(&tmp, p)
+    std::fs::rename(&tmp, p).inspect_err(|e| crate::diag::event(format!("sync keys: save failed: {e}")))
 }
 
 const UNDO_DEPTH: usize = 50;
@@ -152,11 +155,19 @@ impl StCore {
     #[uniffi::constructor]
     pub fn new(path: String, now: i64) -> Arc<Self> {
         let p = PathBuf::from(path);
+        crate::diag::init(p.parent().map(|d| d.to_path_buf()));
         let lib = store::load(&p, now);
         let identity_path = Some(p.with_file_name("stranitsa-sync.json"));
         let identity = load_identity(&identity_path);
         Arc::new(StCore {
-            inner: Mutex::new(Inner { lib, writer: Some(store::DiskWriter::new(p)), undo: Vec::new(), identity, identity_path }),
+            inner: Mutex::new(Inner {
+                lib,
+                writer: Some(store::DiskWriter::new(p.clone())),
+                undo: Vec::new(),
+                identity,
+                identity_path,
+                data_path: Some(p),
+            }),
         })
     }
 
@@ -170,6 +181,7 @@ impl StCore {
                 undo: Vec::new(),
                 identity: Identity::generate(),
                 identity_path: None,
+                data_path: None,
             }),
         })
     }
@@ -193,6 +205,69 @@ impl StCore {
         if let Some(w) = &self.inner.lock().unwrap().writer {
             w.flush();
         }
+    }
+
+    /// Сведения для отчёта об ошибке: только числа и настройки, без текстов задач,
+    /// названий списков и имён устройств.
+    pub fn diagnostics(&self) -> Vec<String> {
+        use crate::model::Status;
+        let i = self.inner.lock().unwrap();
+        let lib = &i.lib;
+        let mut count = [0usize; 5];
+        let mut pending_review = 0;
+        for n in &lib.notebooks {
+            for e in &n.entries {
+                count[match e.status {
+                    Status::Active => 0,
+                    Status::Done => 1,
+                    Status::Reentered => 2,
+                    Status::Dismissed => 3,
+                    Status::Cancelled => 4,
+                }] += 1;
+            }
+            pending_review += n.dismissed_for_review().len();
+        }
+        let nb = lib.current();
+        let set = &lib.settings;
+        let tomb_entries: usize = lib.notebooks.iter().map(|n| n.deleted_entries.len()).sum();
+        let size = i.data_path.as_ref().and_then(|p| std::fs::metadata(p).ok()).map(|m| m.len());
+        let on = |b: bool| if b { "on" } else { "off" };
+        vec![
+            format!("format: v{}", lib.version),
+            format!(
+                "lists: {} (current is #{}), lines: {} (active {}, done {}, re-entered {}, dismissed {}, deleted {})",
+                lib.notebooks.len(),
+                lib.notebooks.iter().position(|n| n.id == nb.id).map(|p| p + 1).unwrap_or(0),
+                count.iter().sum::<usize>(),
+                count[0], count[1], count[2], count[3], count[4],
+            ),
+            format!("dismissed waiting for review: {pending_review}"),
+            format!(
+                "current list: page {} of {}, page size {}, acted on visit {}",
+                nb.current_page + 1,
+                nb.last_page() + 1,
+                nb.page_size,
+                on(nb.acted_on_visit)
+            ),
+            format!("removal marks: lines {}, lists {}", tomb_entries, lib.deleted_notebooks.len()),
+            format!(
+                "settings: theme {:?}, pure black {}, wallpaper colors {}, hints {}, system backup {}, auto sync {} min, update check {}",
+                set.theme,
+                on(set.pure_black),
+                on(set.dynamic_color),
+                on(set.show_hints),
+                on(set.system_backup),
+                set.auto_sync_minutes,
+                on(set.check_updates)
+            ),
+            format!("known devices: {}", i.identity.peers.len()),
+            format!("undo steps: {}", i.undo.len()),
+            format!("data file: {}", size.map(|b| format!("{} KB", b.div_ceil(1024))).unwrap_or_else(|| "none".into())),
+            format!(
+                "last save error: {}",
+                i.writer.as_ref().and_then(|w| w.last_error()).unwrap_or_else(|| "none".into())
+            ),
+        ]
     }
 
     // ---------- задачи ----------
@@ -310,11 +385,15 @@ impl StCore {
     /// Убрать закрытые строки старше `days` суток во всех списках. Можно отменить.
     pub fn cleanup(&self, days: i32, now: i64) -> Snapshot {
         let before = now - days.max(0) as i64 * 86_400_000;
-        self.mutate(true, |l| {
+        let mut removed = 0;
+        let snap = self.mutate(true, |l| {
             for n in &mut l.notebooks {
+                removed += n.cleanup_count(before);
                 n.cleanup(before, now);
             }
-        })
+        });
+        crate::diag::event(format!("cleanup: {days} days, {removed} lines removed"));
+        snap
     }
 
     // ---------- настройки ----------
@@ -361,7 +440,8 @@ impl StCore {
 
     /// Восстановить из копии: заменяет все списки. Настройки и id устройства остаются свои. Можно отменить.
     pub fn import_json(&self, text: String, now: i64) -> Result<Snapshot, CoreError> {
-        let other = store::decode(&text, now)?;
+        let other = store::decode(&text, now).inspect_err(|e| crate::diag::event(format!("import: rejected ({})", e.kind())))?;
+        crate::diag::event("import: replaced all lists from a copy");
         Ok(self.mutate(true, move |l| {
             l.notebooks = other.notebooks;
             l.deleted_notebooks = other.deleted_notebooks;
@@ -376,7 +456,7 @@ impl StCore {
     /// Влить копию с другого устройства (синхронизация). Своё — настройки, текущий список,
     /// рабочие страницы — не меняется. После слияния история отмены сбрасывается.
     pub fn merge_json(&self, text: String, now: i64) -> Result<Snapshot, CoreError> {
-        let other = store::decode(&text, now)?;
+        let other = store::decode(&text, now).inspect_err(|e| crate::diag::event(format!("merge: rejected ({})", e.kind())))?;
         let mut i = self.inner.lock().unwrap();
         let before = i.lib.clone();
         i.lib.merge(&other);
@@ -411,6 +491,44 @@ impl StCore {
 mod tests {
     use super::*;
     use crate::model::Status;
+
+    #[test]
+    fn diagnostics_and_journal_never_contain_user_text() {
+        let dir = tempfile::tempdir().unwrap();
+        let p = dir.path().join("stranitsa.json").to_string_lossy().to_string();
+        let core = StCore::new(p, 1);
+        core.add("Секретная задача про Машу".into(), 10);
+        core.done(core.snapshot().entries[0].id.clone(), 15);
+        core.add_list("Тайный проект".into(), 20);
+        let _ = core.import_json("{\"version\":3,\"notebooks\":[{\"text\":\"Секретная цитата\"}]}".into(), 40);
+        let _ = core.merge_json("{\"entries\":\"Секретная цитата\"}".into(), 50);
+        core.cleanup(0, 60);
+        core.flush();
+        let all = [core.diagnostics(), crate::diag::events()].concat().join("\n");
+        for word in ["Секрет", "Маш", "Тайн", "цитат"] {
+            assert!(!all.contains(word), "{word} leaked into:\n{all}");
+        }
+        assert!(all.contains("lists: 2"), "{all}");
+        assert!(all.contains("import: rejected (bad format)"), "{all}");
+    }
+
+    #[test]
+    fn unreadable_data_file_is_set_aside_not_overwritten() {
+        let dir = tempfile::tempdir().unwrap();
+        let path = dir.path().join("stranitsa.json");
+        let original = [0xffu8, 0xfe, b'{', b'x'];
+        std::fs::write(&path, original).unwrap();
+        let core = StCore::new(path.to_string_lossy().to_string(), 1);
+        core.add("новая".into(), 2);
+        core.flush();
+        let aside: Vec<_> = std::fs::read_dir(dir.path())
+            .unwrap()
+            .map(|e| e.unwrap().path())
+            .filter(|p| p.to_string_lossy().contains(".broken-"))
+            .collect();
+        assert_eq!(aside.len(), 1);
+        assert_eq!(std::fs::read(&aside[0]).unwrap(), original);
+    }
 
     #[test]
     fn actions_persist_and_reload() {

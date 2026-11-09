@@ -54,7 +54,8 @@ private object NoActions : StActions {
 }
 
 private const val DAY = 86_400_000L
-private val NOW = System.currentTimeMillis()
+// Постоянное время (9 нояб. 2026, полдень UTC): снимки не должны меняться от дня запуска.
+private const val NOW = 1_794_225_600_000L
 
 private fun StCore.idOf(text: String, fromIndex: Int = 50): String =
     snapshot().entries.drop(fromIndex).first { it.text == text && it.status == Status.ACTIVE }.id
@@ -248,6 +249,27 @@ class ScreensSnapshotTest {
     @Test fun review() = shot { ReviewScreen(ruCore().snapshot(), onBack = {}, onOpenEntry = {}) }
 
     @Test fun about() = shot { AboutScreen(onBack = {}) }
+
+    @Test fun report() = shotTall {
+        val sample = """Stranitsa 1.0.1 (10001) for Android, release
+System: Android 14 (API 34), Google Pixel 7
+Language: ru-RU, system default ru-RU
+Screen: 411×914 dp, density 420 dpi, font scale 1.0, system dark off
+
+format: v3
+lists: 2 (current is #1), lines: 412 (active 128, done 230, re-entered 41, dismissed 9, deleted 4)
+current list: page 3 of 17, page size 25, acted on visit on
+known devices: 1
+last save error: none
+
+Events (UTC):
+2026-11-09 08:12:04Z load: ok, 2 lists, 412 lines
+2026-11-09 08:12:07Z autosync: 1 devices nearby, 1 known
+2026-11-09 08:12:08Z sync: done, 3 new lines"""
+        ReportScreen({ sample }, onSent = {}, onBack = {})
+    }
+
+    @Test fun main_crashed() = shot { MainScreen(ruCore().snapshot(), NoActions, onOpen = {}, crashed = true) }
 
     // ---------- синхронизация ----------
 

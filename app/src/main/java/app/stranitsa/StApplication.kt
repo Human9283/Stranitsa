@@ -7,6 +7,13 @@ import java.io.File
 
 class StApplication : Application() {
 
+    override fun onCreate() {
+        super.onCreate()
+        // Раньше всего остального: сбой при открытии данных тоже должен попасть в отчёт.
+        Diagnostics.install(this)
+        Diagnostics.log("app: start ${BuildConfig.VERSION_NAME}")
+    }
+
     val repository: StRepository by lazy {
         // Ядро само переводит файлы старых версий (1.0–1.7) в новый формат.
         val core = StCore(File(filesDir, DATA_FILE).path, System.currentTimeMillis())

@@ -75,6 +75,16 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
         private set
     private var syncJob: Job? = null
 
+    /** Описание сбоя прошлого запуска — предложить отправить отчёт. */
+    var crash by mutableStateOf(Diagnostics.pendingCrash())
+        private set
+
+    /** Отчёт отправлен, скопирован или отклонён — больше не предлагать. */
+    fun dismissCrash() { Diagnostics.clearCrash(); crash = null }
+
+    /** Текст отчёта об ошибке (с описанием сбоя, если он был). */
+    fun report(maxEvents: Int): String = Diagnostics.report(getApplication(), repo.core, crash, maxEvents)
+
     private fun now() = System.currentTimeMillis()
     private fun settings(f: (Settings) -> Settings) {
         repo.apply { c, _ -> c.setSettings(f(repo.state.value.settings)) }
@@ -108,7 +118,9 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
 
     /** Синхронизироваться со знакомыми устройствами рядом сейчас. */
     suspend fun syncNow() {
-        val reports = runCatching { AutoSync.runOnce(getApplication(), repo.core) }.getOrDefault(emptyList())
+        val reports = runCatching { AutoSync.runOnce(getApplication(), repo.core) }
+            .onFailure { Diagnostics.log("autosync: ${it.javaClass.simpleName}") }
+            .getOrDefault(emptyList())
         if (reports.isNotEmpty()) {
             repo.refresh()
             lastAutoSync = now() to reports.joinToString { it.peerName }

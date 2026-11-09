@@ -12,7 +12,7 @@ import java.io.File
 import java.util.Calendar
 
 enum class View { Page, Search, Dismissed, Review }
-enum class Dialog { None, Confirm, Settings, Sync, Keys, HowTo, About }
+enum class Dialog { None, Confirm, Settings, Sync, Keys, HowTo, About, Report }
 
 class Bar(val text: String, val undoable: Boolean, val id: Long = System.nanoTime())
 
@@ -55,6 +55,13 @@ class AppState(val core: StCore, private val clock: () -> Long = System::current
     var searchIndex by mutableIntStateOf(0)
     val autoSync = AutoSync(this)
     var update by mutableStateOf<Release?>(null)
+    /** Описание сбоя прошлого запуска — при запуске предлагаем отправить отчёт. */
+    var crash by mutableStateOf(Diagnostics.pendingCrash())
+
+    fun report(maxEvents: Int): String = Diagnostics.report(core, crash, maxEvents)
+
+    /** Отчёт отправлен, сохранён или отклонён — больше не предлагать. */
+    fun dismissCrash() { Diagnostics.clearCrash(); crash = null }
 
     /** Раз в запуск: не вышла ли новая версия (если включено в настройках). */
     fun checkUpdates() {

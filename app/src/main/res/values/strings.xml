@@ -266,4 +266,19 @@
         <item quantity="one">Removed %1$d line</item>
         <item quantity="other">Removed %1$d lines</item>
     </plurals>
+    <!-- Отчёт об ошибке -->
+    <string name="section_about">About</string>
+    <string name="app_version">Version %1$s</string>
+    <string name="report_title">Report a problem</string>
+    <string name="report_row_hint">You see the whole report before sending. Your tasks are not in it.</string>
+    <string name="report_lead">The report has the app version, system, settings, counts of lists and lines, and a technical log. It does not have your tasks, list names or device names. Read it before sending.</string>
+    <string name="report_open">Open on GitHub</string>
+    <string name="report_copy">Copy</string>
+    <string name="report_share">Share</string>
+    <string name="report_copied">Report copied.</string>
+    <string name="report_pasted_hint">The report is too long for a link, so it is copied: paste it into the issue text.</string>
+    <string name="report_github_hint">Sending on GitHub needs a GitHub account. Without one, use Share.</string>
+    <string name="report_intro">**What happened?**\n\n(Describe what you were doing and what went wrong.)</string>
+    <string name="crash_banner">The app closed with an error last time. Send a report?</string>
+    <string name="crash_view">View report</string>
 </resources>

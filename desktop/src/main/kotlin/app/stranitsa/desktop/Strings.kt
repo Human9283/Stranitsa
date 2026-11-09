@@ -131,7 +131,21 @@ class Str(private val ru: Boolean) {
     val keys = t("Клавиши", "Keyboard shortcuts")
     val howTo = t("Как работает метод", "How the method works")
     val about = t("О программе", "About")
-    val aboutText = t("Страница 1.0 для компьютера. Метод Autofocus 1 Марка Форстера; приложение неофициальное и с автором метода не связано. Шрифты: Source Serif 4, IBM Plex Sans (SIL OFL).", "Stranitsa 1.0 for desktop. Based on Mark Forster’s Autofocus 1 method; unofficial and not affiliated with the author. Fonts: Source Serif 4, IBM Plex Sans (SIL OFL).")
+    fun aboutText(v: String) = t("Страница $v для компьютера. Метод Autofocus 1 Марка Форстера; приложение неофициальное и с автором метода не связано. Шрифты: Source Serif 4, IBM Plex Sans (SIL OFL).", "Stranitsa $v for desktop. Based on Mark Forster’s Autofocus 1 method; unofficial and not affiliated with the author. Fonts: Source Serif 4, IBM Plex Sans (SIL OFL).")
+    val report = t("Сообщить об ошибке", "Report a problem")
+    val reportLead = t(
+        "В отчёте версия, система, настройки, число списков и строк и технический журнал. Ваших задач, названий списков и имён устройств в нём нет. Прочитайте его перед отправкой. Для отправки на GitHub нужен аккаунт GitHub.",
+        "The report has the app version, system, settings, counts of lists and lines, and a technical log. It does not have your tasks, list names or device names. Read it before sending. Sending on GitHub needs a GitHub account.",
+    )
+    val reportOpen = t("Открыть на GitHub", "Open on GitHub")
+    val copy = t("Копировать", "Copy")
+    val reportCopied = t("Отчёт скопирован.", "Report copied.")
+    fun reportSaved(f: String) = t("Сохранено: $f", "Saved: $f")
+    val reportPaste = t("Отчёт слишком длинный для ссылки, поэтому он скопирован: вставьте его в текст обращения.", "The report is too long for a link, so it is copied: paste it into the issue text.")
+    val reportIntro = t("**Что случилось?**\n\n(Опишите, что вы делали и что пошло не так.)", "**What happened?**\n\n(Describe what you were doing and what went wrong.)")
+    val crashBanner = t("В прошлый раз программа закрылась с ошибкой. Отправить отчёт?", "The app closed with an error last time. Send a report?")
+    val crashFatal = t("В программе произошла ошибка, и она закроется. Данные сохранены. При следующем запуске можно будет отправить отчёт.", "The app hit an error and will close. Your data is saved. Next time you start it you can send a report.")
+    val reportFile = "stranitsa-report.txt"
     val rules = listOf(
         t("Один длинный список всего, что нужно сделать. Новое всегда в конец.", "One long list of everything to do. New items always go at the end."),
         t("Работайте постранично. Сначала быстро прочитайте страницу, ничего не делая.", "Work page by page. First read the page quickly without acting."),

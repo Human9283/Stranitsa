@@ -134,7 +134,10 @@ fun DismissedScreen(state: Snapshot, vm: StActions, onBack: () -> Unit) {
 }
 
 @Composable
-fun SettingsScreen(state: Snapshot, settings: Settings, vm: StActions, onBack: () -> Unit, lastAutoSync: Pair<Long, String>? = null) {
+fun SettingsScreen(
+    state: Snapshot, settings: Settings, vm: StActions, onBack: () -> Unit,
+    lastAutoSync: Pair<Long, String>? = null, onReport: () -> Unit = {},
+) {
     val (minSize, _, maxSize) = remember { pageSizeLimits() }
     val c = Ui.c
     val t = Ui.t
@@ -295,6 +298,16 @@ fun SettingsScreen(state: Snapshot, settings: Settings, vm: StActions, onBack: (
             }
             Hairline()
             status?.let { Txt(it, t.meta, c.muted, Modifier.padding(top = 10.dp)) }
+        }
+
+        SectionLabel(stringResource(R.string.section_about))
+        Column(Modifier.padding(horizontal = 20.dp)) {
+            LinkRow(stringResource(R.string.report_title), stringResource(R.string.report_row_hint), onReport)
+            Hairline()
+            Txt(
+                stringResource(R.string.app_version, app.stranitsa.BuildConfig.VERSION_NAME),
+                t.stats, c.muted, Modifier.padding(top = 10.dp, bottom = 32.dp),
+            )
         }
     }
 }

@@ -49,6 +49,16 @@ pub enum SyncError {
     Data { msg: String },
 }
 
+impl SyncError {
+    /// Для журнала: без содержимого данных (текст ошибки слияния может цитировать чужой файл).
+    pub(crate) fn for_log(&self) -> String {
+        match self {
+            SyncError::Data { .. } => "data error".into(),
+            other => other.to_string(),
+        }
+    }
+}
+
 fn net(e: impl ToString) -> SyncError {
     SyncError::Network { msg: e.to_string() }
 }
@@ -319,6 +329,18 @@ impl SyncSession {
     /// Подтвердить (или отклонить) и обменяться данными. Если нужна сверка кода — ждёт решения
     /// другой стороны. После успеха устройство запоминается как знакомое.
     pub fn finish(&self, confirmed: bool, now: i64) -> Result<SyncReport, SyncError> {
+        let r = self.exchange(confirmed, now);
+        match &r {
+            Ok(rep) => crate::diag::event(format!("sync: done, {} new lines", rep.new_entries)),
+            Err(SyncError::Rejected) if !confirmed => {}
+            Err(e) => crate::diag::event(format!("sync: failed: {}", e.for_log())),
+        }
+        r
+    }
+}
+
+impl SyncSession {
+    fn exchange(&self, confirmed: bool, now: i64) -> Result<SyncReport, SyncError> {
         let mut guard = self.channel.lock().unwrap();
         let ch = guard.as_mut().ok_or(SyncError::Rejected)?;
         if self.info.needs_confirmation {
@@ -489,8 +511,16 @@ impl SyncHost {
     /// Фоновый приём для автосинхронизации: знакомое устройство — обмен без вопросов,
     /// незнакомое — отказ (знакомство требует кода или QR на экране).
     pub fn accept_known(&self, timeout_ms: i64) -> Option<SyncReport> {
-        let s = self.accept(timeout_ms).ok()??;
+        let s = match self.accept(timeout_ms) {
+            Ok(Some(s)) => s,
+            Ok(None) => return None,
+            Err(e) => {
+                crate::diag::event(format!("listen: incoming connection failed: {}", e.for_log()));
+                return None;
+            }
+        };
         if s.peer().needs_confirmation {
+            crate::diag::event("listen: unknown device refused");
             let _ = s.finish(false, now_ms());
             return None;
         }
@@ -609,16 +639,22 @@ fn now_ms() -> i64 {
 pub fn sync_known_nearby(core: Arc<StCore>, device_name: String, wait_ms: i64) -> Vec<SyncReport> {
     let browser = SyncBrowser::start(core.clone());
     std::thread::sleep(Duration::from_millis(wait_ms.clamp(0, 30_000) as u64));
-    let peers: Vec<NearbyPeer> = browser.peers().into_iter().filter(|p| p.known).collect();
+    let all = browser.peers();
+    let peers: Vec<NearbyPeer> = all.iter().filter(|p| p.known).cloned().collect();
     browser.stop();
+    crate::diag::event(format!("autosync: {} devices nearby, {} known", all.len(), peers.len()));
     let mut out = Vec::new();
     for p in peers {
-        if let Ok(s) = sync_connect(core.clone(), p, device_name.clone()) {
-            if s.peer().needs_confirmation {
-                let _ = s.finish(false, now_ms());
-            } else if let Ok(r) = s.finish(true, now_ms()) {
-                out.push(r);
+        match sync_connect(core.clone(), p, device_name.clone()) {
+            Ok(s) => {
+                if s.peer().needs_confirmation {
+                    crate::diag::event("autosync: device no longer recognises us, skipped");
+                    let _ = s.finish(false, now_ms());
+                } else if let Ok(r) = s.finish(true, now_ms()) {
+                    out.push(r);
+                }
             }
+            Err(e) => crate::diag::event(format!("autosync: connect failed: {}", e.for_log())),
         }
     }
     out

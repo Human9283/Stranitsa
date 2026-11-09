@@ -26,6 +26,17 @@ pub enum CoreError {
     Io { msg: String },
 }
 
+impl CoreError {
+    /// Вид ошибки без подробностей: текст ошибки разбора может цитировать содержимое файла.
+    pub fn kind(&self) -> &'static str {
+        match self {
+            CoreError::BadFormat { .. } => "bad format",
+            CoreError::TooNew { .. } => "newer app version",
+            CoreError::Io { .. } => "i/o error",
+        }
+    }
+}
+
 impl From<std::io::Error> for CoreError {
     fn from(e: std::io::Error) -> Self {
         CoreError::Io { msg: e.to_string() }
@@ -240,19 +251,52 @@ fn migrate_v1(v: V1, now: i64) -> Library {
 
 /// Загрузка. Нет файла — пустая библиотека. Испорченный файл откладывается рядом (`.broken-…`), не затирается.
 pub fn load(path: &Path, now: i64) -> Library {
-    let Ok(text) = fs::read_to_string(path) else {
-        return Library::new(now);
+    let bytes = match fs::read(path) {
+        Ok(b) => b,
+        Err(e) if e.kind() == std::io::ErrorKind::NotFound => {
+            crate::diag::event("load: no data file yet, starting empty");
+            return Library::new(now);
+        }
+        Err(e) => {
+            // Файл есть, но не читается. Пустой список отсюда нельзя записывать поверх —
+            // откладываем копию (если получится), как и для повреждённого файла.
+            crate::diag::event(format!("load: data file unreadable ({:?}), starting empty", e.kind()));
+            set_aside(path, now);
+            return Library::new(now);
+        }
     };
-    match decode(&text, now) {
-        Ok(lib) => lib,
-        Err(_) => {
-            let aside = path.with_file_name(format!(
-                "{}.broken-{now}",
-                path.file_name().and_then(|n| n.to_str()).unwrap_or("stranitsa.json")
-            ));
-            let _ = fs::copy(path, aside);
+    let parsed = match String::from_utf8(bytes) {
+        Ok(text) => decode(&text, now),
+        Err(_) => Err(bad("not UTF-8")),
+    };
+    match parsed {
+        Ok(lib) => {
+            let lines: usize = lib.notebooks.iter().map(|n| n.entries.len()).sum();
+            crate::diag::event(format!("load: ok, {} lists, {} lines", lib.notebooks.len(), lines));
+            lib
+        }
+        Err(e) => {
+            // Текст ошибки разбора может цитировать содержимое файла — в журнал только вид.
+            let kind = match e {
+                CoreError::TooNew { version } => format!("from a newer app version (format {version})"),
+                CoreError::BadFormat { .. } => "damaged".to_string(),
+                CoreError::Io { .. } => "i/o error".to_string(),
+            };
+            crate::diag::event(format!("load: data file {kind}, copy set aside, starting empty"));
+            set_aside(path, now);
             Library::new(now)
         }
+    }
+}
+
+/// Сохранить нечитаемый файл рядом под именем `stranitsa.json.broken-<время>`.
+fn set_aside(path: &Path, now: i64) {
+    let aside = path.with_file_name(format!(
+        "{}.broken-{now}",
+        path.file_name().and_then(|n| n.to_str()).unwrap_or("stranitsa.json")
+    ));
+    if fs::copy(path, &aside).is_err() {
+        crate::diag::event("load: could not copy the unreadable file aside");
     }
 }
 
@@ -308,7 +352,15 @@ impl DiskWriter {
                         take(next);
                     }
                     if let Some(t) = text {
-                        *err.lock().unwrap() = save_text(&path, &t).err().map(|e| e.to_string());
+                        let result = save_text(&path, &t).err().map(|e| e.to_string());
+                        let mut slot = err.lock().unwrap();
+                        if result != *slot {
+                            match &result {
+                                Some(e) => crate::diag::event(format!("save failed: {e}")),
+                                None => crate::diag::event("save: ok again"),
+                            }
+                        }
+                        *slot = result;
                     }
                     for a in acks {
                         let _ = a.send(());

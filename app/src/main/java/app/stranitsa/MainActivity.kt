@@ -27,13 +27,14 @@ import app.stranitsa.ui.StTheme
 import app.stranitsa.ui.DismissedScreen
 import app.stranitsa.ui.ListsScreen
 import app.stranitsa.ui.MainScreen
+import app.stranitsa.ui.ReportScreen
 import app.stranitsa.ui.ReviewScreen
 import app.stranitsa.ui.SearchScreen
 import app.stranitsa.ui.SettingsScreen
 import app.stranitsa.ui.SyncScreen
 import app.stranitsa.ui.isDark
 
-enum class Screen { Main, Dismissed, Settings, About, Search, Lists, Review, Sync }
+enum class Screen { Main, Dismissed, Settings, About, Search, Lists, Review, Sync, Report }
 
 class MainActivity : ComponentActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -97,13 +98,19 @@ fun StApp(vm: StViewModel, lib: Snapshot) {
             onDismissBreak = vm::dismissBreak,
             update = vm.update,
             onDismissUpdate = vm::dismissUpdate,
+            crashed = vm.crash != null,
+            onDismissCrash = vm::dismissCrash,
             jumpTo = jumpTo, onJumped = { jumpTo = null },
         )
         Screen.Search -> SearchScreen(state, vm::search, onBack = back, onOpenEntry = open)
         Screen.Review -> ReviewScreen(state, onBack = { vm.dismissBreak(); back() }, onOpenEntry = { vm.dismissBreak(); open(it) })
         Screen.Lists -> ListsScreen(lib, vm, onBack = back, onPicked = back)
         Screen.Dismissed -> DismissedScreen(state, vm, onBack = back)
-        Screen.Settings -> SettingsScreen(state, lib.settings, vm, onBack = back, lastAutoSync = vm.lastAutoSync)
+        Screen.Settings -> SettingsScreen(
+            state, lib.settings, vm, onBack = back, lastAutoSync = vm.lastAutoSync,
+            onReport = { screen = Screen.Report },
+        )
+        Screen.Report -> ReportScreen(vm::report, onSent = vm::dismissCrash, onBack = back)
         Screen.About -> AboutScreen(onBack = back)
         Screen.Sync -> SyncScreen(vm.core, onSynced = vm::refresh, onBack = back)
     }

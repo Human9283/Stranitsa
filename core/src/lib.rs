@@ -5,12 +5,14 @@
 //! * [`library`] — несколько списков, слияние копий с разных устройств, отмена;
 //! * [`text`] — поиск и разбор текста из «Поделиться»;
 //! * [`store`] — файл: чтение с миграцией старых форматов, атомарная запись;
-//! * [`core`] — объект для приложений (через UniFFI: Kotlin, Swift).
+//! * [`core`] — объект для приложений (через UniFFI: Kotlin, Swift);
+//! * [`diag`] — журнал служебных событий и файл о сбое для отчёта об ошибке.
 
 uniffi::setup_scaffolding!();
 
 pub mod rules;
 pub mod core;
+pub mod diag;
 pub mod library;
 pub mod model;
 pub mod store;

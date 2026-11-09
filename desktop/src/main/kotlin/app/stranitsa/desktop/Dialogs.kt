@@ -17,6 +17,10 @@ import androidx.compose.foundation.layout.heightIn
 import androidx.compose.foundation.layout.padding
 import androidx.compose.foundation.layout.width
 import androidx.compose.foundation.rememberScrollState
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.text.selection.SelectionContainer
+import androidx.compose.ui.text.font.FontFamily
+import androidx.compose.ui.unit.sp
 import androidx.compose.foundation.verticalScroll
 import androidx.compose.foundation.shape.RoundedCornerShape
 import androidx.compose.runtime.Composable
@@ -239,7 +243,60 @@ fun AboutDialog(st: AppState) {
     Modal({ st.dialog = Dialog.None }, onEnter = { st.dialog = Dialog.None }) {
         Txt(S.appName, Type.title)
         Spacer(h = 8.dp)
-        Txt(S.aboutText, Type.body, c.muted)
-        DialogButtons { Btn(S.close, { st.dialog = Dialog.None }, Kind.Filled, "Esc", height = 32.dp) }
+        Txt(S.aboutText(Diagnostics.version), Type.body, c.muted)
+        DialogButtons {
+            Btn(S.report + "…", { st.dialog = Dialog.Report }, Kind.Outline, height = 32.dp)
+            Btn(S.close, { st.dialog = Dialog.None }, Kind.Filled, "Esc", height = 32.dp)
+        }
+    }
+}
+
+/** Отчёт об ошибке: виден целиком; отправляет сам человек — через GitHub, буфер обмена или файл. */
+@Composable
+fun ReportDialog(st: AppState, window: Frame?) {
+    val c = Ui.c
+    val report = remember { st.report(200) }
+    var status by remember { mutableStateOf<String?>(null) }
+    val close = { st.dialog = Dialog.None }
+    fun copy() = runCatching {
+        java.awt.Toolkit.getDefaultToolkit().systemClipboard.setContents(java.awt.datatransfer.StringSelection(report), null)
+    }
+    Modal(close, width = 680.dp) {
+        Txt(S.report, Type.title)
+        Spacer(h = 8.dp)
+        if (st.crash != null) {
+            Txt(S.crashBanner, Type.ui, c.ink, Modifier.padding(bottom = 6.dp))
+        }
+        Txt(S.reportLead, Type.body, c.muted)
+        Spacer(h = 12.dp)
+        Box(
+            Modifier.fillMaxWidth().weight(1f, fill = false).heightIn(max = 380.dp)
+                .border(1.dp, c.rule, RoundedCornerShape(6.dp)).padding(12.dp),
+        ) {
+            SelectionContainer {
+                Txt(
+                    report, Type.meta.copy(fontFamily = FontFamily.Monospace, lineHeight = 17.sp), c.ink,
+                    Modifier.verticalScroll(rememberScrollState()).horizontalScroll(rememberScrollState()),
+                )
+            }
+        }
+        status?.let { Txt(it, Type.meta, c.ink, Modifier.padding(top = 8.dp)) }
+        DialogButtons {
+            Btn(S.save + "…", {
+                val d = FileDialog(window, S.report, FileDialog.SAVE).apply { file = S.reportFile; isVisible = true }
+                if (d.file != null) {
+                    status = runCatching { File(d.directory, d.file).writeText(report) }
+                        .fold({ st.dismissCrash(); S.reportSaved(d.file) }, { it.message ?: "" })
+                }
+            }, Kind.Outline, height = 32.dp)
+            Btn(S.copy, { copy(); status = S.reportCopied; st.dismissCrash() }, Kind.Outline, height = 32.dp)
+            Btn(if (st.crash != null) S.later else S.close, { st.dismissCrash(); close() }, Kind.Outline, "Esc", height = 32.dp)
+            Btn(S.reportOpen, {
+                val url = Diagnostics.issueUrl(S.reportIntro) { st.report(it) }
+                    ?: Diagnostics.issueUrlWith(S.reportIntro, null).also { copy(); status = S.reportPaste }
+                Updates.open(url)
+                st.dismissCrash()
+            }, Kind.Filled, height = 32.dp)
+        }
     }
 }

@@ -143,6 +143,9 @@ fun MainScreen(
     /** Вышла новая версия — предложить скачать. */
     update: app.stranitsa.Release? = null,
     onDismissUpdate: () -> Unit = {},
+    /** Прошлый запуск закончился сбоем — предложить отчёт. */
+    crashed: Boolean = false,
+    onDismissCrash: () -> Unit = {},
 ) {
     val c = Ui.c
     val t = Ui.t
@@ -303,7 +306,17 @@ fun MainScreen(
             if (hint != null) Txt(hint, t.hint, c.ink, Modifier.padding(top = 8.dp, end = 16.dp))
         }
 
-        // После долгого перерыва Форстер советует сначала прочитать все невыполненные задачи.
+        if (crashed) {
+            Hairline(Modifier.padding(top = 10.dp))
+            Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 14.dp, top = 10.dp)) {
+                Txt(stringResource(R.string.crash_banner), t.hint, c.ink)
+                Row(Modifier.padding(top = 6.dp, bottom = 4.dp), verticalAlignment = Alignment.CenterVertically) {
+                    FilledAction(stringResource(R.string.crash_view), { onOpen(Screen.Report) })
+                    Spacer(Modifier.width(4.dp))
+                    TextAction(stringResource(R.string.break_later), onDismissCrash, color = c.ink)
+                }
+            }
+        }
         if (update != null) {
             val ctx = LocalContext.current
             Hairline(Modifier.padding(top = 10.dp))
@@ -318,6 +331,7 @@ fun MainScreen(
                 TextAction(stringResource(R.string.break_later), onDismissUpdate, color = c.ink)
             }
         }
+        // После долгого перерыва Форстер советует сначала прочитать все невыполненные задачи.
         if (breakDays > 0) {
             Hairline(Modifier.padding(top = 10.dp))
             Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 14.dp, top = 10.dp)) {

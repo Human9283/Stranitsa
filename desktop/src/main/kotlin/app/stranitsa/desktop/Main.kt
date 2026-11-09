@@ -8,8 +8,10 @@ import androidx.compose.foundation.layout.fillMaxHeight
 import androidx.compose.foundation.layout.fillMaxSize
 import androidx.compose.foundation.layout.width
 import androidx.compose.runtime.Composable
+import androidx.compose.runtime.CompositionLocalProvider
 import androidx.compose.runtime.LaunchedEffect
 import androidx.compose.runtime.remember
+import androidx.compose.ui.ExperimentalComposeUiApi
 import androidx.compose.ui.Modifier
 import androidx.compose.ui.graphics.painter.BitmapPainter
 import androidx.compose.ui.input.key.Key
@@ -26,7 +28,10 @@ import androidx.compose.ui.unit.DpSize
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.window.ApplicationScope
 import androidx.compose.ui.window.FrameWindowScope
+import androidx.compose.ui.window.LocalWindowExceptionHandlerFactory
 import androidx.compose.ui.window.MenuBar
+import androidx.compose.ui.window.WindowExceptionHandler
+import androidx.compose.ui.window.WindowExceptionHandlerFactory
 import androidx.compose.ui.window.Window
 import androidx.compose.ui.window.WindowPosition
 import androidx.compose.ui.window.WindowState
@@ -37,6 +42,8 @@ import app.stranitsa.core.ThemeMode
 import java.awt.Dimension
 import java.io.File
 import java.util.prefs.Preferences
+import javax.swing.JOptionPane
+import kotlin.system.exitProcess
 
 private val isMac = System.getProperty("os.name").lowercase().contains("mac")
 
@@ -44,12 +51,21 @@ private val isMac = System.getProperty("os.name").lowercase().contains("mac")
 private fun KeyEvent.primary() = if (isMac) isMetaPressed else isCtrlPressed
 private fun shortcut(k: Key, shift: Boolean = false) = if (isMac) KeyShortcut(k, meta = true, shift = shift) else KeyShortcut(k, ctrl = true, shift = shift)
 
+@OptIn(ExperimentalComposeUiApi::class)
 fun main() {
     val file = File(dataDir(), "stranitsa.json")
+    // Раньше всего остального: сбой при открытии данных тоже должен попасть в отчёт.
+    Diagnostics.install(file.parentFile)
+    Diagnostics.log("app: start ${Diagnostics.version}")
     val core = StCore(file.path, System.currentTimeMillis())
     val prefs = Preferences.userRoot().node("app/stranitsa")
     application {
-        val st = remember { AppState(core).also { it.checkBreak(); it.sidebar = prefs.getBoolean("sidebar", true); it.checkUpdates() } }
+        val st = remember {
+            AppState(core).also {
+                it.checkBreak(); it.sidebar = prefs.getBoolean("sidebar", true); it.checkUpdates()
+                if (it.crash != null) it.dialog = Dialog.Report
+            }
+        }
         LaunchedEffect(st.snap.settings.autoSyncMinutes) { st.autoSync.configure(st.snap.settings.autoSyncMinutes) }
         LaunchedEffect(st.dialog) { if (st.dialog == Dialog.Sync) st.autoSync.pause() else st.autoSync.resume() }
         val ws = rememberWindowState(
@@ -72,9 +88,20 @@ fun main() {
         ) {
             LaunchedEffect(Unit) { window.minimumSize = Dimension(640, 480) }
             AppMenu(st, ::quit)
+            // Ошибка внутри окна: сохранить описание и данные, объяснить и закрыться —
+            // а не зависнуть с полуотрисованным окном.
+            CompositionLocalProvider(LocalWindowExceptionHandlerFactory provides WindowExceptionHandlerFactory { w ->
+                WindowExceptionHandler { e ->
+                    Diagnostics.recordCrash("AWT-EventQueue (window)", e)
+                    runCatching { core.flush() }
+                    JOptionPane.showMessageDialog(w, S.crashFatal, S.appName, JOptionPane.ERROR_MESSAGE)
+                    exitProcess(1)
+                }
+            }) {
             val dark = when (st.snap.settings.theme) { ThemeMode.LIGHT -> false; ThemeMode.DARK -> true; ThemeMode.SYSTEM -> isSystemInDarkTheme() }
             AppTheme(if (!dark) Light else if (st.snap.settings.pureBlack) Amoled else Dark) {
                 App(st, file, window)
+            }
             }
         }
     }
@@ -98,6 +125,7 @@ private fun App(st: AppState, file: File, window: java.awt.Frame) {
             Dialog.Keys -> KeysDialog(st)
             Dialog.HowTo -> HowToDialog(st)
             Dialog.About -> AboutDialog(st)
+            Dialog.Report -> ReportDialog(st, window)
         }
     }
 }
@@ -125,6 +153,8 @@ private fun FrameWindowScope.AppMenu(st: AppState, quit: () -> Unit) {
         Menu(S.menuHelp) {
             Item(S.keys, onClick = { st.dialog = Dialog.Keys }, shortcut = KeyShortcut(Key.F1))
             Item(S.howTo, onClick = { st.dialog = Dialog.HowTo })
+            Item(S.report + "…", onClick = { st.dialog = Dialog.Report })
+            Separator()
             Item(S.about, onClick = { st.dialog = Dialog.About })
         }
     }
