@@ -74,6 +74,11 @@ fun Sidebar(st: AppState) {
     val s = st.snap
     var creating by remember { mutableStateOf(false) }
     Column(Modifier.width(232.dp).fillMaxHeight().background(c.side).padding(horizontal = 8.dp, vertical = 12.dp)) {
+        Row(Modifier.padding(start = 10.dp, top = 2.dp, bottom = 14.dp), verticalAlignment = Alignment.CenterVertically) {
+            Logo(22.dp)
+            Spacer(w = 10.dp)
+            Txt(S.appName, Type.title.copy(fontSize = Type.ui.fontSize * 1.15f), c.ink)
+        }
         Txt(S.lists, Type.label, c.muted, Modifier.padding(start = 10.dp, bottom = 6.dp, top = 4.dp))
         s.notebooks.forEach { nb ->
             val cur = nb.id == s.currentId
@@ -95,6 +100,15 @@ fun Sidebar(st: AppState) {
             }
         }
         Box(Modifier.weight(1f))
+        st.update?.let { u ->
+            Column(Modifier.fillMaxWidth().padding(horizontal = 10.dp, vertical = 8.dp)) {
+                Txt(S.updateAvailable(u.version), Type.ui, c.ink)
+                Row(Modifier.padding(top = 4.dp)) {
+                    Btn(S.download, { Updates.open(u.assetUrl ?: u.pageUrl) }, Kind.Filled)
+                    Btn(S.later, { st.update = null })
+                }
+            }
+        }
         val dismissed = s.dismissedForReview.size
         SideItem(Glyph.Archive, S.dismissed, if (dismissed > 0) dismissed.toString() else null, st.view == View.Dismissed) { st.view = View.Dismissed }
         SideItem(Glyph.Sync, S.sync, null, false) { st.dialog = Dialog.Sync }

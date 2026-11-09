@@ -47,7 +47,7 @@ class MainActivity : ComponentActivity() {
 
             // Перерыв замечаем при каждом возвращении в приложение, а не только при запуске процесса.
             LifecycleEventEffect(Lifecycle.Event.ON_START) { vm.onAppStart() }
-            LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.markSeen(); vm.flush() }
+            LifecycleEventEffect(Lifecycle.Event.ON_STOP) { vm.markSeen(); vm.onAppStop(); vm.flush() }
 
             // Значки строки состояния и навигации — по теме приложения, а не системы.
             LaunchedEffect(dark) {
@@ -95,13 +95,15 @@ fun StApp(vm: StViewModel, lib: Snapshot) {
             listName = listName,
             breakDays = vm.breakDays,
             onDismissBreak = vm::dismissBreak,
+            update = vm.update,
+            onDismissUpdate = vm::dismissUpdate,
             jumpTo = jumpTo, onJumped = { jumpTo = null },
         )
         Screen.Search -> SearchScreen(state, vm::search, onBack = back, onOpenEntry = open)
         Screen.Review -> ReviewScreen(state, onBack = { vm.dismissBreak(); back() }, onOpenEntry = { vm.dismissBreak(); open(it) })
         Screen.Lists -> ListsScreen(lib, vm, onBack = back, onPicked = back)
         Screen.Dismissed -> DismissedScreen(state, vm, onBack = back)
-        Screen.Settings -> SettingsScreen(state, lib.settings, vm, onBack = back)
+        Screen.Settings -> SettingsScreen(state, lib.settings, vm, onBack = back, lastAutoSync = vm.lastAutoSync)
         Screen.About -> AboutScreen(onBack = back)
         Screen.Sync -> SyncScreen(vm.core, onSynced = vm::refresh, onBack = back)
     }

@@ -1,5 +1,15 @@
 package app.stranitsa
 
+import android.content.Context
+import androidx.compose.runtime.mutableStateOf
+import androidx.lifecycle.viewModelScope
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.Job
+import kotlinx.coroutines.delay
+import kotlinx.coroutines.isActive
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+
 import android.app.Application
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableIntStateOf
@@ -28,6 +38,8 @@ interface StActions {
     fun setPureBlack(on: Boolean)
     fun setDynamicColor(on: Boolean)
     fun setSystemBackup(on: Boolean)
+    fun setAutoSync(minutes: Int)
+    fun setCheckUpdates(on: Boolean)
     fun switchList(id: String)
     fun addList(name: String)
     fun renameList(id: String, name: String)
@@ -53,6 +65,14 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
     var breakDays by mutableIntStateOf(0)
         private set
 
+    /** Вышла новая версия (проверка раз в 12 часов, если включена в настройках). */
+    var update by mutableStateOf<Release?>(null)
+        private set
+    /** Когда и с кем в последний раз прошла автосинхронизация. */
+    var lastAutoSync by mutableStateOf<Pair<Long, String>?>(null)
+        private set
+    private var syncJob: Job? = null
+
     private fun now() = System.currentTimeMillis()
     private fun settings(f: (Settings) -> Settings) {
         repo.apply { c, _ -> c.setSettings(f(repo.state.value.settings)) }
@@ -65,7 +85,52 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
         val days = if (last > 0) ((now() - last) / DAY).toInt() else 0
         if (days >= BREAK_DAYS && s.activeTotal > 0) breakDays = days
         markSeen()
+        checkUpdates()
+        startAutoSync()
     }
+
+    /** Приложение ушло с экрана: автосинхронизация останавливается до возвращения. */
+    fun onAppStop() { syncJob?.cancel(); syncJob = null }
+
+    private fun startAutoSync() {
+        syncJob?.cancel()
+        val minutes = snapshot.value.settings.autoSyncMinutes
+        if (minutes <= 0) return
+        syncJob = viewModelScope.launch {
+            while (isActive) {
+                syncNow()
+                delay(minutes * 60_000L)
+            }
+        }
+    }
+
+    /** Синхронизироваться со знакомыми устройствами рядом сейчас. */
+    suspend fun syncNow() {
+        val reports = runCatching { AutoSync.runOnce(getApplication(), repo.core) }.getOrDefault(emptyList())
+        if (reports.isNotEmpty()) {
+            repo.refresh()
+            lastAutoSync = now() to reports.joinToString { it.peerName }
+        }
+    }
+
+    private fun checkUpdates() {
+        if (!snapshot.value.settings.checkUpdates) { update = null; return }
+        val prefs = getApplication<Application>().getSharedPreferences("updates", Context.MODE_PRIVATE)
+        val last = prefs.getLong("checked", 0)
+        val cached = prefs.getString("version", null)
+        if (cached != null && Updates.isNewer(cached, BuildConfig.VERSION_NAME)) {
+            update = Release(cached, prefs.getString("page", "")!!, prefs.getString("apk", null))
+        }
+        if (now() - last < 12 * 60 * 60 * 1000L) return
+        viewModelScope.launch {
+            val r = withContext(Dispatchers.IO) { Updates.fetchLatest() } ?: return@launch
+            prefs.edit().putLong("checked", now()).putString("version", r.version)
+                .putString("page", r.pageUrl).putString("apk", r.apkUrl).apply()
+            update = r.takeIf { Updates.isNewer(it.version, BuildConfig.VERSION_NAME) }
+        }
+    }
+
+    fun dismissUpdate() { update = null }
 
     /** Файл пишется в фоне; уходя с экрана, дожидаемся, чтобы он точно оказался на диске. */
     fun flush() = repo.flush()
@@ -88,6 +153,8 @@ class StViewModel(app: Application) : AndroidViewModel(app), StActions {
     override fun setPureBlack(on: Boolean) = settings { it.copy(pureBlack = on) }
     override fun setDynamicColor(on: Boolean) = settings { it.copy(dynamicColor = on) }
     override fun setSystemBackup(on: Boolean) = settings { it.copy(systemBackup = on) }
+    override fun setAutoSync(minutes: Int) { settings { it.copy(autoSyncMinutes = minutes) }; startAutoSync() }
+    override fun setCheckUpdates(on: Boolean) { settings { it.copy(checkUpdates = on) }; if (on) checkUpdates() else update = null }
     override fun switchList(id: String) { breakDays = 0; repo.apply { c, _ -> c.switchList(id) } }
     override fun addList(name: String) { repo.apply { c, n -> c.addList(name, n) } }
     override fun renameList(id: String, name: String) { repo.apply { c, n -> c.renameList(id, name, n) } }

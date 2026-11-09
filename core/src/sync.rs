@@ -486,6 +486,17 @@ impl SyncHost {
 
     /// Ждать подключения до `timeout_ms`. `None` — никто не подключился (или остановлено).
     /// Неудачное рукопожатие (чужой, неверный секрет) возвращается ошибкой — можно ждать дальше.
+    /// Фоновый приём для автосинхронизации: знакомое устройство — обмен без вопросов,
+    /// незнакомое — отказ (знакомство требует кода или QR на экране).
+    pub fn accept_known(&self, timeout_ms: i64) -> Option<SyncReport> {
+        let s = self.accept(timeout_ms).ok()??;
+        if s.peer().needs_confirmation {
+            let _ = s.finish(false, now_ms());
+            return None;
+        }
+        s.finish(true, now_ms()).ok()
+    }
+
     pub fn accept(&self, timeout_ms: i64) -> Result<Option<Arc<SyncSession>>, SyncError> {
         let deadline = Instant::now() + Duration::from_millis(timeout_ms.max(0) as u64);
         loop {
@@ -586,6 +597,31 @@ pub fn sync_connect(core: Arc<StCore>, peer: NearbyPeer, device_name: String) ->
         return Err(hs("a different device answered"));
     }
     Ok(s)
+}
+
+fn now_ms() -> i64 {
+    std::time::SystemTime::now().duration_since(std::time::UNIX_EPOCH).map(|d| d.as_millis() as i64).unwrap_or(0)
+}
+
+/// Автосинхронизация: в течение `wait_ms` ищет знакомые устройства рядом (у которых открыт
+/// приём) и обменивается с каждым без кодов. Незнакомые не трогает.
+#[uniffi::export]
+pub fn sync_known_nearby(core: Arc<StCore>, device_name: String, wait_ms: i64) -> Vec<SyncReport> {
+    let browser = SyncBrowser::start(core.clone());
+    std::thread::sleep(Duration::from_millis(wait_ms.clamp(0, 30_000) as u64));
+    let peers: Vec<NearbyPeer> = browser.peers().into_iter().filter(|p| p.known).collect();
+    browser.stop();
+    let mut out = Vec::new();
+    for p in peers {
+        if let Ok(s) = sync_connect(core.clone(), p, device_name.clone()) {
+            if s.peer().needs_confirmation {
+                let _ = s.finish(false, now_ms());
+            } else if let Ok(r) = s.finish(true, now_ms()) {
+                out.push(r);
+            }
+        }
+    }
+    out
 }
 
 // ---------- поиск рядом ----------
@@ -889,5 +925,36 @@ mod tests {
         sync_connect(phone.clone(), local(&host), "Т".into()).unwrap().finish(true, 1000).unwrap();
         t.join().unwrap().unwrap();
         assert_eq!(pc.snapshot().entries.len(), 400);
+    }
+
+    #[test]
+    fn host_accept_known_syncs_known_and_refuses_strangers() {
+        let a = StCore::in_memory(1);
+        let b = StCore::in_memory(1);
+        let c = StCore::in_memory(1);
+        a.add("на компьютере".into(), 2);
+        b.add("на телефоне".into(), 3);
+        // знакомство по QR
+        let host = SyncHost::start(a.clone(), "ПК".into(), false).unwrap();
+        let h = host.clone();
+        let t = thread::spawn(move || { let s = h.accept(5000).unwrap().unwrap(); s.finish(true, 10).unwrap() });
+        sync_connect_qr(b.clone(), host.qr_text(), "Телефон".into()).unwrap().finish(true, 10).unwrap();
+        t.join().unwrap();
+        // повторно — в фоне, без кода
+        b.add("ещё с телефона".into(), 20);
+        let h = host.clone();
+        let t = thread::spawn(move || h.accept_known(5000));
+        let peer = NearbyPeer { device_id: a.device_id(), name: "ПК".into(), addresses: vec!["127.0.0.1".into()], port: host.port(), known: true };
+        sync_connect(b.clone(), peer.clone(), "Телефон".into()).unwrap().finish(true, 30).unwrap();
+        assert!(t.join().unwrap().is_some());
+        assert!(texts(&a).contains(&"ещё с телефона".to_string()));
+        // незнакомый — отказ без обмена
+        let h = host.clone();
+        let t = thread::spawn(move || h.accept_known(5000));
+        let r = sync_connect(c.clone(), peer, "Чужой".into()).and_then(|s| s.finish(true, 40));
+        assert!(t.join().unwrap().is_none());
+        assert!(r.is_err() || !texts(&a).iter().any(|x| x == "чужое"));
+        assert!(!texts(&c).contains(&"на компьютере".to_string()));
+        host.stop();
     }
 }

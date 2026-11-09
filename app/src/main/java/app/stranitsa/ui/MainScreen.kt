@@ -140,6 +140,9 @@ fun MainScreen(
     /** Дней без открытия приложения (0 — не напоминаем). */
     breakDays: Int = 0,
     onDismissBreak: () -> Unit = {},
+    /** Вышла новая версия — предложить скачать. */
+    update: app.stranitsa.Release? = null,
+    onDismissUpdate: () -> Unit = {},
 ) {
     val c = Ui.c
     val t = Ui.t
@@ -301,6 +304,20 @@ fun MainScreen(
         }
 
         // После долгого перерыва Форстер советует сначала прочитать все невыполненные задачи.
+        if (update != null) {
+            val ctx = LocalContext.current
+            Hairline(Modifier.padding(top = 10.dp))
+            Row(Modifier.fillMaxWidth().padding(start = 20.dp, end = 8.dp, top = 6.dp, bottom = 2.dp), verticalAlignment = Alignment.CenterVertically) {
+                Txt(stringResource(R.string.update_available, update.version), t.hint, c.ink, Modifier.weight(1f))
+                TextAction(stringResource(R.string.update_get), {
+                    runCatching {
+                        ctx.startActivity(android.content.Intent(android.content.Intent.ACTION_VIEW, android.net.Uri.parse(update.apkUrl ?: update.pageUrl)))
+                    }
+                    onDismissUpdate()
+                }, color = c.accent)
+                TextAction(stringResource(R.string.break_later), onDismissUpdate, color = c.ink)
+            }
+        }
         if (breakDays > 0) {
             Hairline(Modifier.padding(top = 10.dp))
             Column(Modifier.fillMaxWidth().padding(start = 20.dp, end = 14.dp, top = 10.dp)) {

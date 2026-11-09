@@ -1,0 +1,61 @@
+# Выпуск: git tag v1.2.3 && git push --tags → APK и установщики для Windows, macOS, Linux
+# в GitHub Releases. Приложения сами находят новый выпуск (если репозиторий публичный).
+#
+# Секреты репозитория для подписи APK (Settings → Secrets and variables → Actions):
+#   ANDROID_KEYSTORE_BASE64  — base64 от keystore/release.jks
+#   ANDROID_KEYSTORE_PROPERTIES — содержимое keystore/keystore.properties
+name: release
+on:
+  push:
+    tags: ["v*"]
+permissions:
+  contents: write
+jobs:
+  android:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: android-actions/setup-android@v3
+      - run: sdkmanager "platforms;android-35" "build-tools;35.0.0" "ndk;27.2.12479018"
+      - uses: dtolnay/rust-toolchain@stable
+        with:
+          targets: aarch64-linux-android,armv7-linux-androideabi,x86_64-linux-android
+      - run: cargo install cargo-ndk
+      - name: Signing key
+        env:
+          KS: ${{ secrets.ANDROID_KEYSTORE_BASE64 }}
+          PROPS: ${{ secrets.ANDROID_KEYSTORE_PROPERTIES }}
+        run: |
+          mkdir -p keystore
+          echo "$KS" | base64 -d > keystore/release.jks
+          printf '%s\n' "$PROPS" > keystore/keystore.properties
+      - name: Build
+        run: |
+          V="${GITHUB_REF_NAME#v}"
+          ./gradlew assembleRelease -PappVersion="$V" -PupdateRepo="$GITHUB_REPOSITORY"
+          cp app/build/outputs/apk/release/app-release.apk "Stranitsa-$V.apk"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: Stranitsa-*.apk
+
+  desktop:
+    strategy:
+      matrix:
+        os: [ubuntu-latest, windows-latest, macos-latest]
+    runs-on: ${{ matrix.os }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-java@v4
+        with: { distribution: temurin, java-version: "21" }
+      - uses: dtolnay/rust-toolchain@stable
+      - if: runner.os == 'Linux'
+        run: sudo apt-get update && sudo apt-get install -y fakeroot
+      - name: Build
+        working-directory: desktop
+        shell: bash
+        run: ./gradlew packageDistributionForCurrentOS -PappVersion="${GITHUB_REF_NAME#v}" -PupdateRepo="$GITHUB_REPOSITORY"
+      - uses: softprops/action-gh-release@v2
+        with:
+          files: desktop/build/compose/binaries/main/*/*

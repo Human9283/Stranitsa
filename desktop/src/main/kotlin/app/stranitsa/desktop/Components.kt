@@ -249,3 +249,17 @@ fun HoverRow(
 
 @Composable
 fun Spacer(w: Dp = 0.dp, h: Dp = 0.dp) = Box(Modifier.width(w).height(h))
+
+/** Знак программы: синяя плитка со строками страницы (вторая вычеркнута, у третьей — метка выбора). */
+@Composable
+fun Logo(size: Dp) {
+    val accent = Color(0xFF1F3FBF)
+    Canvas(Modifier.size(size)) {
+        val u = this.size.width / 512f
+        drawRoundRect(accent, androidx.compose.ui.geometry.Offset(16 * u, 16 * u), androidx.compose.ui.geometry.Size(480 * u, 480 * u), androidx.compose.ui.geometry.CornerRadius(110 * u))
+        val w = Color(0xFFFAFAF9); val g = Color(0xFFA0AFE1)
+        fun bar(x1: Float, y: Float, x2: Float, col: Color) = drawRect(col, androidx.compose.ui.geometry.Offset(x1 * u, y * u), androidx.compose.ui.geometry.Size((x2 - x1) * u, 16 * u))
+        bar(150f, 140f, 360f, w); bar(150f, 205f, 320f, g); bar(150f, 270f, 350f, w); bar(150f, 335f, 290f, w)
+        drawRect(w, androidx.compose.ui.geometry.Offset(118 * u, 262 * u), androidx.compose.ui.geometry.Size(16 * u, 32 * u))
+    }
+}

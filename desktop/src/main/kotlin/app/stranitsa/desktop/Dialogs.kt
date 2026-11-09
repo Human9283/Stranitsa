@@ -131,6 +131,19 @@ fun SettingsDialog(st: AppState, dataFile: File, window: Frame?) {
                 st.apply { core, _ -> core.setSettings(set.copy(theme = modes[i])) }
             }
         }
+        Hairline()
+        Column(Modifier.fillMaxWidth().padding(vertical = 10.dp)) {
+            Txt(S.autoSync, Type.ui)
+            Txt(S.autoSyncHint, Type.meta, c.muted, Modifier.padding(top = 2.dp, bottom = 8.dp))
+            val steps = listOf(0, 5, 15, 30, 60)
+            Segmented(listOf(S.off) + steps.drop(1).map { S.minutes(it) }, steps.indexOf(set.autoSyncMinutes).coerceAtLeast(0)) { i ->
+                st.apply { core, _ -> core.setSettings(set.copy(autoSyncMinutes = steps[i])) }
+            }
+        }
+        st.autoSync.lastSync?.let { (t, who) ->
+            Txt(S.lastSync(java.time.format.DateTimeFormatter.ofPattern("HH:mm").format(java.time.Instant.ofEpochMilli(t).atZone(java.time.ZoneId.systemDefault())), who), Type.meta, c.muted, Modifier.padding(bottom = 6.dp))
+        }
+        SettingRow(S.checkUpdates, S.checkUpdatesHint) { Switch(set.checkUpdates, S.checkUpdates) { v -> st.apply { core, _ -> core.setSettings(set.copy(checkUpdates = v)) } } }
         SettingRow(S.pureBlack) { Switch(set.pureBlack, S.pureBlack) { v -> st.apply { core, _ -> core.setSettings(set.copy(pureBlack = v)) } } }
         SettingRow(S.dataFile, dataFile.path) {
             Btn(S.openFolder, { runCatching { Desktop.getDesktop().open(dataFile.parentFile) } }, Kind.Outline)

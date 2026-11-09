@@ -81,6 +81,12 @@ pub struct Settings {
     pub system_backup: bool,
     /// Когда приложение в последний раз было открыто, мс.
     pub last_seen: i64,
+    /// Автосинхронизация со знакомыми устройствами рядом: раз в столько минут; 0 — выключена.
+    #[uniffi(default = 0)]
+    pub auto_sync_minutes: i32,
+    /// Проверять, не вышла ли новая версия (GitHub Releases).
+    #[uniffi(default = true)]
+    pub check_updates: bool,
 }
 
 impl Default for Settings {
@@ -92,6 +98,8 @@ impl Default for Settings {
             dynamic_color: false,
             system_backup: false,
             last_seen: 0,
+            auto_sync_minutes: 0,
+            check_updates: true,
         }
     }
 }

@@ -7,7 +7,9 @@ plugins {
 }
 
 group = "io.stranitsa"
-version = "1.0.0"
+// Версия выпуска: ./gradlew -PappVersion=1.2.3 (в CI — из тега v1.2.3).
+val appVersion = (findProperty("appVersion") as String?) ?: "1.0.0"
+version = appVersion
 
 // ---------- Ядро на Rust (../core) ----------
 // Собираем библиотеку под этот компьютер, генерируем Kotlin-привязки и кладём библиотеку в ресурсы
@@ -69,16 +71,20 @@ dependencies {
 compose.desktop {
     application {
         mainClass = "app.stranitsa.desktop.MainKt"
+        // Версия и источник обновлений — внутрь программы.
+        val updateRepo = (findProperty("updateRepo") as String?) ?: "Human9283/Stranitsa"
+        jvmArgs += listOf("-Dstranitsa.version=$appVersion", "-Dstranitsa.updateRepo=$updateRepo")
         nativeDistributions {
             // Каждый формат собирается только на своей системе: .msi/.exe — на Windows, .dmg — на macOS.
             targetFormats(TargetFormat.Deb, TargetFormat.Rpm, TargetFormat.Msi, TargetFormat.Exe, TargetFormat.Dmg)
             packageName = "Stranitsa"
-            packageVersion = "1.0.0"
+            packageVersion = appVersion
             description = "Stranitsa: one long list, worked page by page (method by Mark Forster)"
             vendor = "Stranitsa"
             modules("java.prefs", "jdk.unsupported")
             linux { iconFile.set(project.file("icon/stranitsa.png")) }
-            windows { menuGroup = "Stranitsa"; upgradeUuid = "dc195755-2276-4fee-bd5a-dc2daf48d6fd" }
+            macOS { iconFile.set(project.file("icon/stranitsa.icns")); bundleID = "app.stranitsa.desktop" }
+            windows { iconFile.set(project.file("icon/stranitsa.ico")); shortcut = true; dirChooser = true; perUserInstall = true; menuGroup = "Stranitsa"; upgradeUuid = "dc195755-2276-4fee-bd5a-dc2daf48d6fd" }
         }
         buildTypes.release.proguard { isEnabled.set(false) }
     }

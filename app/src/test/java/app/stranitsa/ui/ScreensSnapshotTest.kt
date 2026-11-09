@@ -39,6 +39,8 @@ private object NoActions : StActions {
     override fun setPureBlack(on: Boolean) {}
     override fun setDynamicColor(on: Boolean) {}
     override fun setSystemBackup(on: Boolean) {}
+    override fun setAutoSync(minutes: Int) {}
+    override fun setCheckUpdates(on: Boolean) {}
     override fun switchList(id: String) {}
     override fun addList(name: String) {}
     override fun renameList(id: String, name: String) {}

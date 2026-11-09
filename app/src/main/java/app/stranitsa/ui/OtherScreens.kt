@@ -46,6 +46,7 @@ import app.stranitsa.core.Snapshot
 import app.stranitsa.core.ThemeMode
 import app.stranitsa.core.pageSizeLimits
 import android.os.Build
+import androidx.compose.foundation.layout.height
 import java.time.Instant
 import androidx.compose.foundation.border
 import androidx.compose.foundation.layout.size
@@ -132,7 +133,7 @@ fun DismissedScreen(state: Snapshot, vm: StActions, onBack: () -> Unit) {
 }
 
 @Composable
-fun SettingsScreen(state: Snapshot, settings: Settings, vm: StActions, onBack: () -> Unit) {
+fun SettingsScreen(state: Snapshot, settings: Settings, vm: StActions, onBack: () -> Unit, lastAutoSync: Pair<Long, String>? = null) {
     val (minSize, _, maxSize) = remember { pageSizeLimits() }
     val c = Ui.c
     val t = Ui.t
@@ -198,6 +199,34 @@ fun SettingsScreen(state: Snapshot, settings: Settings, vm: StActions, onBack: (
             if (Build.VERSION.SDK_INT >= 33) {
                 Txt(stringResource(R.string.themed_icon_hint), t.stats, c.muted, Modifier.padding(top = 10.dp))
             }
+        }
+
+        SectionLabel(stringResource(R.string.section_sync))
+        Column(Modifier.padding(horizontal = 20.dp)) {
+            Txt(stringResource(R.string.auto_sync), t.setting, modifier = Modifier.padding(top = 6.dp))
+            Txt(stringResource(R.string.auto_sync_hint), t.stats, c.muted)
+            val steps = listOf(0, 5, 15, 30, 60)
+            Segmented(
+                listOf(stringResource(R.string.auto_sync_off), "5", "15", "30", "60"),
+                steps.indexOf(settings.autoSyncMinutes).coerceAtLeast(0),
+                { vm.setAutoSync(steps[it]) },
+                Modifier.padding(top = 8.dp, bottom = 4.dp),
+            )
+            Txt(
+                if (settings.autoSyncMinutes > 0) stringResource(R.string.auto_sync_every, settings.autoSyncMinutes) else stringResource(R.string.auto_sync_minutes),
+                t.stats, c.muted,
+            )
+            if (lastAutoSync != null) {
+                val fmt = remember { DateTimeFormatter.ofPattern("HH:mm") }
+                Txt(
+                    stringResource(R.string.auto_sync_last, fmt.format(Instant.ofEpochMilli(lastAutoSync.first).atZone(ZoneId.systemDefault())), lastAutoSync.second),
+                    t.stats, c.muted, Modifier.padding(top = 2.dp),
+                )
+            }
+            Spacer(Modifier.height(10.dp))
+            Hairline()
+            ToggleRow(stringResource(R.string.check_updates), stringResource(R.string.check_updates_hint), settings.checkUpdates) { vm.setCheckUpdates(it) }
+            Hairline()
         }
 
         SectionLabel(stringResource(R.string.section_data))

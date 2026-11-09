@@ -74,8 +74,13 @@ android {
         applicationId = "app.stranitsa"
         minSdk = 26
         targetSdk = 35
-        versionCode = 1
-        versionName = "1.0"
+        // Версия задаётся при выпуске: ./gradlew -PappVersion=1.2.3 (из тега v1.2.3 в CI).
+        val appVersion = (project.findProperty("appVersion") as String?) ?: "1.0.0"
+        versionName = appVersion
+        versionCode = appVersion.split('.').map { it.toIntOrNull() ?: 0 }.let { (it + 0 + 0).take(3) }
+            .let { it[0] * 10000 + it[1] * 100 + it[2] }
+        // Откуда приходят обновления (GitHub Releases); переопределяется -PupdateRepo=владелец/имя.
+        buildConfigField("String", "UPDATE_REPO", "\"" + ((project.findProperty("updateRepo") as String?) ?: "Human9283/Stranitsa") + "\"")
         // Оставляем только свои языки — без переводов из библиотек AndroidX.
         resourceConfigurations += listOf("en", "ru")
         // Ядро собирается под эти три архитектуры (все телефоны с Android 8+ и эмуляторы x86_64).
@@ -110,7 +115,7 @@ android {
         targetCompatibility = JavaVersion.VERSION_17
     }
     kotlinOptions { jvmTarget = "17" }
-    buildFeatures { compose = true }
+    buildFeatures { compose = true; buildConfig = true }
 }
 
 dependencies {

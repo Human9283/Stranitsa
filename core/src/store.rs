@@ -208,7 +208,7 @@ fn migrate_v0(v: V0, now: i64) -> Library {
             pure_black: v.pure_black,
             dynamic_color: v.dynamic_color,
             system_backup: v.system_backup,
-            last_seen: 0,
+            ..Settings::default()
         },
     }
 }

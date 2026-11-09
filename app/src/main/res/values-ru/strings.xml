@@ -249,4 +249,15 @@
     <string name="widget_header">из %1$s · %2$s</string>
     <string name="widget_small_label">%1$s</string>
     <string name="widget_small_meta">из %1$s · активных %2$d</string>
+    <string name="section_sync">Синхронизация</string>
+    <string name="auto_sync">Автосинхронизация</string>
+    <string name="auto_sync_hint">Со знакомыми устройствами в этой сети, пока приложение открыто. На компьютере «Страница» должна быть запущена, с включённой автосинхронизацией.</string>
+    <string name="auto_sync_off">Выкл</string>
+    <string name="auto_sync_minutes">Интервал в минутах</string>
+    <string name="auto_sync_every">Каждые %1$d мин и при каждом открытии</string>
+    <string name="auto_sync_last">Последняя: %1$s · %2$s</string>
+    <string name="check_updates">Проверять обновления</string>
+    <string name="check_updates_hint">Дважды в день спрашивать GitHub, не вышла ли новая версия</string>
+    <string name="update_available">Доступна версия %1$s</string>
+    <string name="update_get">Скачать</string>
 </resources>

@@ -49,14 +49,16 @@ fun main() {
     val core = StCore(file.path, System.currentTimeMillis())
     val prefs = Preferences.userRoot().node("app/stranitsa")
     application {
-        val st = remember { AppState(core).also { it.checkBreak(); it.sidebar = prefs.getBoolean("sidebar", true) } }
+        val st = remember { AppState(core).also { it.checkBreak(); it.sidebar = prefs.getBoolean("sidebar", true); it.checkUpdates() } }
+        LaunchedEffect(st.snap.settings.autoSyncMinutes) { st.autoSync.configure(st.snap.settings.autoSyncMinutes) }
+        LaunchedEffect(st.dialog) { if (st.dialog == Dialog.Sync) st.autoSync.pause() else st.autoSync.resume() }
         val ws = rememberWindowState(
             size = DpSize(prefs.getInt("w", 1100).dp, prefs.getInt("h", 760).dp),
             position = if (prefs.getInt("x", Int.MIN_VALUE) == Int.MIN_VALUE) WindowPosition.PlatformDefault
             else WindowPosition(prefs.getInt("x", 0).dp, prefs.getInt("y", 0).dp),
         )
         fun quit() {
-            st.markSeen(); core.flush()
+            st.autoSync.stop(); st.markSeen(); core.flush()
             prefs.putInt("w", ws.size.width.value.toInt()); prefs.putInt("h", ws.size.height.value.toInt())
             (ws.position as? WindowPosition.Absolute)?.let { prefs.putInt("x", it.x.value.toInt()); prefs.putInt("y", it.y.value.toInt()) }
             prefs.putBoolean("sidebar", st.sidebar)
@@ -108,6 +110,7 @@ private fun FrameWindowScope.AppMenu(st: AppState, quit: () -> Unit) {
             Item(S.newList, onClick = { st.sidebar = true }, shortcut = shortcut(Key.N, shift = true))
             Separator()
             Item(S.sync, onClick = { st.dialog = Dialog.Sync })
+            Item(S.syncNowMenu, onClick = { st.autoSync.syncNow() })
             Item(S.settings, onClick = { st.dialog = Dialog.Settings }, shortcut = shortcut(Key.Comma))
             Separator()
             Item(S.quit, onClick = quit, shortcut = shortcut(Key.Q))

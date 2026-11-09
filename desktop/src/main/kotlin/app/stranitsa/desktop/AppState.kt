@@ -53,6 +53,15 @@ class AppState(val core: StCore, private val clock: () -> Long = System::current
     var focusSearch by mutableIntStateOf(0)
     var breakDays by mutableIntStateOf(0)
     var searchIndex by mutableIntStateOf(0)
+    val autoSync = AutoSync(this)
+    var update by mutableStateOf<Release?>(null)
+
+    /** Раз в запуск: не вышла ли новая версия (если включено в настройках). */
+    fun checkUpdates() {
+        if (!snap.settings.checkUpdates || Updates.current == "0") return
+        Thread { Updates.fetchLatest()?.takeIf { Updates.isNewer(it.version, Updates.current) }?.let { r -> javax.swing.SwingUtilities.invokeLater { update = r } } }
+            .apply { isDaemon = true }.start()
+    }
 
     fun searchHits(): List<app.stranitsa.core.SearchHit> = if (query.isBlank()) emptyList() else core.search(query, includeClosed)
 
