@@ -11,18 +11,37 @@ name: release
 on:
   push:
     tags: ["v*", "[0-9]*"]
-  # Пересобрать выпуск вручную: Actions → release → Run workflow → тег (например v1.0.1).
+  # Выпуск без командной строки: Actions → release → Run workflow → тег (например v1.0.2).
+  # Если такого тега ещё нет, он создаётся на последнем коммите выбранной ветки.
   workflow_dispatch:
     inputs:
       tag:
-        description: "Тег выпуска, который нужно (пере)собрать"
+        description: "Тег выпуска, например v1.0.2 (нет — создам; есть — пересоберу)"
         required: true
 permissions:
   contents: write
-env:
-  TAG: ${{ inputs.tag || github.ref_name }}
 jobs:
+  prepare:
+    runs-on: ubuntu-latest
+    outputs:
+      tag: ${{ steps.t.outputs.tag }}
+    steps:
+      - uses: actions/checkout@v4
+      - id: t
+        env:
+          RAW: ${{ inputs.tag || github.ref_name }}
+        run: |
+          TAG="$RAW"
+          [[ "$TAG" =~ ^v?[0-9]+\.[0-9]+\.[0-9]+$ ]] || { echo "::error::Тег должен выглядеть как v1.2.3"; exit 1; }
+          if ! git ls-remote --exit-code --tags origin "refs/tags/$TAG" > /dev/null; then
+            git tag "$TAG" "$GITHUB_SHA"
+            git push origin "refs/tags/$TAG"
+          fi
+          echo "tag=$TAG" >> "$GITHUB_OUTPUT"
   android:
+    needs: prepare
+    env:
+      TAG: ${{ needs.prepare.outputs.tag }}
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -76,6 +95,9 @@ jobs:
           files: Stranitsa-*.apk
 
   desktop:
+    needs: prepare
+    env:
+      TAG: ${{ needs.prepare.outputs.tag }}
     strategy:
       matrix:
         os: [ubuntu-latest, windows-latest, macos-latest]
